@@ -40,7 +40,7 @@ int main(){
         
         char* pathToPrint = getPathToPrint(absolutePath, currentPath);
         
-        printf("<%s@%s:%s>",username, sysinfo->sysname, pathToPrint);
+        printf("<%s@%s:%s>",username, sysinfo->nodename, pathToPrint);
         fflush(stdout); // Ensure the prompt is displayed immediately
         
         free(pathToPrint); // Free memory
