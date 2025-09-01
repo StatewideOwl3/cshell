@@ -46,10 +46,12 @@ int main(){
         free(pathToPrint); // Free memory
         free(currentPath);
 
+
         // Take user command:
         char input[MAX_INPUT_SIZE];
         scanf("%4095[^\n]", input); // Limit input to prevent overflow
         getchar(); // Consume the newline character left by scanf else infinite prints (scanf does not consume it)
+
 
         // Process user command:
         printf("You entered: %s\n", input);
