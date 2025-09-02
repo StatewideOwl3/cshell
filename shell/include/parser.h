@@ -5,7 +5,47 @@
 #include <stdbool.h>
 
 #include <unistd.h>
+#include <regex.h>
 
+struct separator{
+    char sep;
+    struct cmd_group* nextCmdGroup;
+    struct atomic* nextAtomic;
+    struct terminal* nextTerminal;
+};
+
+struct shell_cmd{
+    // tokenize shell_cmd into LL of cmd_groups
+    // cmd_group -> separator -> cmd_group -> separator -> .... -> (cmd_group | &) 
+    // token is cmd_group, separators are & ;
+    bool validity;
+    struct cmd_group* cmdHead;
+};
+
+
+struct cmd_group{
+    // linked list all atomics with separators also included?
+    // token -> separator -> token -> separator -> ...-> token
+    // token is atomic, separator is |
+    bool validity;
+    struct atomic* atomicHead;
+    struct separator* separator;
+};
+
+struct atomic{
+    // LL of name, input, output with separators
+    // token -> token -> token -> seaparator -> token -> separator -> ... -> token
+    // no necessary to have a separator b/w two tokens here!
+    // token is essentially name always, separator could be ' ', <, >, >>
+    bool validity;
+    struct terminal* terminalHead;
+    struct separator* separator;
+};
+
+struct terminal{
+    bool validity;
+    struct separator* separator;
+};
 
 /*
 PURPOSE : checks if the shell command is made up of a bunch of command groups separated by ; or &.
