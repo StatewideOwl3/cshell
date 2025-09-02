@@ -11,7 +11,59 @@ WORKING:
     will check if each cmd_group is valid using checkCmdGroup function.
     if all cmd_groups are valid, return true, else false.
 */
-bool checkShellCmd(char* shellCommand);
+struct shell_cmd* checkShellCmd(char* shellCommandString){
+    struct shell_cmd* shellCmdStruct = (struct shell_cmd*)malloc(sizeof(struct shell_cmd));
+    shellCmdStruct->validity = true; // assume true
+    shellCmdStruct->cmdHead = NULL;
+
+    int total_len = strlen(shellCommandString);
+    if (total_len == 0){
+        shellCmdStruct->validity = false;
+        return shellCmdStruct; // empty shell command is invalid
+    }
+    char* str = shellCommandString;
+    struct cmd_group* head = NULL;
+    struct separator* tail = NULL;
+
+    for (int i = 0; i<total_len;i++){
+        // skip whitespace
+        while(str[i] == ' ' || str[i] == '\t' || str[i] == '\n' || str[i] == '\r') i++;
+        
+        int start_index = i;
+        
+        // find end of this command group
+        while(str[i]!=';' || str[i]!='&') i++;
+
+        int end_index = i;
+        // str[i] str[i+1] ... str[i'-1] is one CMD group. str[i] is separator at this level
+        
+        // make a node for this cmd_group
+        struct cmd_group* node = (struct cmd_group*)malloc(sizeof(struct cmd_group));
+        node->cmd_string = (char*)malloc(sizeof(char)*(end_index-start_index+1));
+        strncpy(node->cmd_string, str+i, end_index - start_index);
+        
+        // set up the separator node
+        struct separator* sep = (struct separator*)malloc(sizeof(struct separator));
+        sep->nextAtomic = NULL;
+        sep->nextCmdGroup = NULL;
+        sep->nextTerminal = NULL;
+        sep->sep = str[i];
+        
+        node->separator = sep;
+        
+        // link new ?->[node->sep] to list and update tail
+        if (tail!=NULL)
+            tail->nextCmdGroup = node;
+        tail = sep;
+        if (head==NULL){
+            head = node;
+            shellCmdStruct->cmdHead = node;
+        }
+
+        sep->nextCmdGroup = node;
+
+    }
+}
 
 
 
@@ -42,6 +94,7 @@ WORKING:
 bool checkAtomic(char* atomic){
     // of the form "name (name | input | output)*" have to tokenize this
     // === "name (name | < name | > name | >> name)"
+
 
     int total_len = strlen(atomic);
     if (total_len == 0){

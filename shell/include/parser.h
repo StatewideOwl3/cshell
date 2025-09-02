@@ -30,6 +30,7 @@ struct cmd_group{
     bool validity;
     struct atomic* atomicHead;
     struct separator* separator;
+    char* cmd_string;
 };
 
 struct atomic{
@@ -57,7 +58,7 @@ WORKING:
     will check if each cmd_group is valid using checkCmdGroup function.
     if all cmd_groups are valid, return true, else false.
 */
-bool checkShellCmd(char* shellCommand);
+struct shell_cmd* checkShellCmd(char* shellCommand);
 
 
 
