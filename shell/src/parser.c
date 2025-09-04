@@ -261,9 +261,9 @@ bool checkShellCmd(struct shell_cmd* shellCommand){
 
     // Check each command group for validity
     for (int i = 0; i < shellCommand->cmdArrIndex; i++) {
-        printf("Checking validity of each command: %d of %d\n", i+1, shellCommand->cmdArrIndex);
+        //printf("Checking validity of each command: %d of %d\n", i+1, shellCommand->cmdArrIndex);
         if (!checkCmdGroup(shellCommand->cmdGroupArr[i])){
-            printf("checkCmdGroup returned false for the command group '%s'\n",shellCommand->cmdGroupArr[i]->cmdString);
+            //printf("checkCmdGroup returned false for the command group '%s'\n",shellCommand->cmdGroupArr[i]->cmdString);
             shellCommand->validity = false;
             return false;
         }

@@ -58,7 +58,7 @@ int main(){
 
 
         // Verify user command:
-        printf("INPUT SCANNED: %s\n",input);
+        //printf("INPUT SCANNED: %s\n",input);
         struct shell_cmd* shellCmdStruct = verifyCommand(input);
         if (shellCmdStruct->validity == false){
             freeShellCmd(shellCmdStruct);
