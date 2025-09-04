@@ -8,6 +8,7 @@
 #include <sys/utsname.h>
 
 #include "../include/printPrompt.h"
+#include "../include/parser.h"
 
 int main(){
     // Store the directory path in which the shell is started in
@@ -54,7 +55,7 @@ int main(){
 
 
         // Process user command:
-        printf("You entered: %s\n", input);
+        verifyCommand(input);
         
         // Repeat
     }

@@ -3,8 +3,9 @@
 CC = gcc
 SRC1 = ./src/main.c
 SRC2 = ./src/printPrompt.c
+SRC3 = ./src/parser.c
 
-SRC = $(SRC1) $(SRC2)
+SRC = $(SRC1) $(SRC2) $(SRC3)
 OUT = shell.out
 
 all: $(OUT)
