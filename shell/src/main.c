@@ -49,14 +49,22 @@ int main(){
 
 
         // Take user command:
-        char input[MAX_INPUT_SIZE];
-        scanf("%4095[^\n]", input); // Limit input to prevent overflow
-        getchar(); // Consume the newline character left by scanf else infinite prints (scanf does not consume it)
+        char input[MAX_INPUT_SIZE] = {0}; // Clearing it before reading into it
+        if (fgets(input, MAX_INPUT_SIZE, stdin) == NULL) continue;
+        input[strcspn(input, "\n")] = 0; // Remove trailing newline
+        if (strlen(input) == 0) continue; // Skip empty input
 
 
-        // Process user command:
-        verifyCommand(input);
+        // Verify user command:
+        printf("INPUT SCANNED: %s\n",input);
+        struct shell_cmd* shellCmdStruct = verifyCommand(input);
         
+        // Process user command
+
+
+        // Free memory allocations at each level
+
+
         // Repeat
     }
     return 0;

@@ -117,11 +117,46 @@ struct shell_cmd* tokenizeShellCommand(char* shellCommandString){
 }
 
 bool checkShellCmd(struct shell_cmd* shellCommand){
-    if (!shellCommand) return false;
-    for (int i = 0; i < shellCommand->cmdArrIndex; i++) {
-        if (!checkCmdGroup(shellCommand->cmdGroupArr[i])) return false;
+
+    int totalCmds = shellCommand->cmdArrIndex;
+    int totalSeps = shellCommand->sepArrIndex;
+
+    // Check for empty command groups
+    for (int i = 0; i < totalCmds; i++) {
+        struct cmd_group* cmdGroup = shellCommand->cmdGroupArr[i];
+        
+        if (cmdGroup->cmdString == NULL){
+            printf("cmd string is a null pointer\n");
+            return false;
+        }
+        
+        if (strlen(shellCommand->cmdGroupArr[i]->cmdString) == 0) {
+            shellCommand->validity = false;
+            printf("found an empty command group or it has an empty string\n");
+            return false;
+        }
     }
-    // Optionally: check for valid use of & and ; separators
+
+    // Last separator should be empty or ampersand (if present)
+    if (totalSeps > 0) {
+        char* lastSep = shellCommand->separatorArr[totalSeps - 1];
+        if (!(strcmp(lastSep, "") == 0 || strcmp(lastSep, "&") == 0)) {
+            shellCommand->validity = false;
+            printf("last separator not '' or 'ampersand'\n");
+            return false;
+        }
+    }
+
+    // Check each command group for validity
+    for (int i = 0; i < shellCommand->cmdArrIndex; i++) {
+        printf("Checking validity of each command: %d of %d\n", i+1, shellCommand->cmdArrIndex);
+        if (!checkCmdGroup(shellCommand->cmdGroupArr[i])){
+            printf("checkCmdGroup returned false for the command group '%s'\n",shellCommand->cmdGroupArr[i]->cmdString);
+            shellCommand->validity = false;
+            return false;
+        }
+    }
+
     shellCommand->validity = true;
     return true;
 }
@@ -132,15 +167,8 @@ bool checkShellCmd(struct shell_cmd* shellCommand){
     separator arrays.
 */
 
-struct cmd_group* tokenizeCmdGroup(char* cmdString){
+struct cmd_group* tokenizeCmdGroup(struct cmd_group* cmdGroup){
     ////////////////////////////// LLM GENERATED CODE BEGNS /////////////////////////////////
-    // Allocate memory for cmd_group struct
-    struct cmd_group* cmdGroup = (struct cmd_group*)malloc(sizeof(struct cmd_group));
-    if (cmdGroup == NULL) {
-        perror("Failed to allocate memory for cmd_group");
-        // functions to free memory at each level
-        return NULL;
-    }
 
     // Initialize indices and validity
     cmdGroup->atomicArrIndex = 0;
@@ -157,7 +185,7 @@ struct cmd_group* tokenizeCmdGroup(char* cmdString){
         return NULL;
     }
     
-
+    char* cmdString = cmdGroup->cmdString;
     int stringLength = strlen(cmdString);
     int i = 0;
     while(i<stringLength){
@@ -225,11 +253,46 @@ struct cmd_group* tokenizeCmdGroup(char* cmdString){
 }
 
 bool checkCmdGroup(struct cmd_group* cmdGroup){
-    if (!cmdGroup) return false;
-    for (int i = 0; i < cmdGroup->atomicArrIndex; i++) {
-        if (!checkAtomic(cmdGroup->atomicArr[i])) return false;
+
+    // Reject if there are no atomics
+    if (cmdGroup->atomicArrIndex == 0) {
+        printf("No atomics found in command group\n");
+        cmdGroup->validity = false;
+        return false;
     }
-    // Optionally: check for valid pipe usage (no consecutive pipes, etc.)
+
+    // Check for empty atomics (e.g. "ls |", "| ls", "ls | | grep")
+    for (int i = 0; i < cmdGroup->atomicArrIndex; i++) {
+        struct atomic* atomic = cmdGroup->atomicArr[i];
+        if (atomic->atomicString == NULL) {
+            printf("Atomic string is a null pointer in command group \n");
+            cmdGroup->validity = false;
+            return false;
+        }
+        if (strlen(atomic->atomicString) == 0) {
+            printf("Empty atomic found at position %d in command group '%s'\n", i, cmdGroup->cmdString);
+            cmdGroup->validity = false;
+            return false;
+        }
+    }
+
+    // Reject if last separator is a pipe
+    if (strcmp(cmdGroup->separatorArr[cmdGroup->sepArrIndex-1],"|")==0){
+        printf("ERROR checkCmdGroup: Separator | found after last atomic group\n");
+        cmdGroup->validity = false;
+        return false;
+    }
+
+    // Check for each atomic's validity:
+    for (int i=0; i<cmdGroup->atomicArrIndex; i++){
+        struct atomic* atomic = cmdGroup->atomicArr[i];
+        if (!checkAtomic(atomic)) {
+            printf("Invalid atomic at position %d in command group '%s'\n", i, cmdGroup->cmdString);
+            cmdGroup->validity = false;
+            return false;
+        }
+    }
+
     cmdGroup->validity = true;
     return true;
 }
@@ -239,15 +302,8 @@ bool checkCmdGroup(struct cmd_group* cmdGroup){
     for each atomic in atomicArr, take the string and build the terminal and
     separator arrays.
 */
-struct atomic* tokenizeAtomic(char* atomicString){
+struct atomic* tokenizeAtomic(struct atomic* atomicGroup){
     ////////////////////////////// LLM GENERATED CODE BEGNS /////////////////////////////////
-    // Allocate memory for atomic struct
-    struct atomic* atomicGroup = (struct atomic*)malloc(sizeof(struct atomic));
-    if (atomicGroup == NULL) {
-        perror("Failed to allocate memory for atomic");
-        // functions to free memory at each level
-        return NULL;
-    }
 
     // Initialize indices and validity
     atomicGroup->termArrIndex = 0;
@@ -264,7 +320,7 @@ struct atomic* tokenizeAtomic(char* atomicString){
         return NULL;
     }
     
-
+    char* atomicString = atomicGroup->atomicString;
     int stringLength = strlen(atomicString);
     int i = 0;
     while(i<stringLength){
@@ -397,19 +453,21 @@ void testTokenizeShellCommand() {
 }
 
 void testTokenizeCmdGroup() {
+    struct cmd_group* cmdGroup = (struct cmd_group*)malloc(sizeof(struct cmd_group));
     char* testCmdGroup = "ls -l  >> name.txt | grep txt < name.txt | wc -l";
-    struct cmd_group* result = tokenizeCmdGroup(testCmdGroup);
+    cmdGroup->cmdString = testCmdGroup;
+    cmdGroup = tokenizeCmdGroup(cmdGroup);
 
-    if (result == NULL) {
+    if (cmdGroup == NULL) {
         printf("Tokenization failed.\n");
         return;
     }
 
-    printf("Number of atomic commands: %d\n", result->atomicArrIndex);
-    for (int i = 0; i < result->atomicArrIndex; i++) {
-        printf("Atomic Command %d: %s\n", i + 1, result->atomicArr[i]->atomicString);
-        if (i < result->sepArrIndex) {
-            printf("Separator %d: %s\n", i + 1, result->separatorArr[i]);
+    printf("Number of atomic commands: %d\n", cmdGroup->atomicArrIndex);
+    for (int i = 0; i < cmdGroup->atomicArrIndex; i++) {
+        printf("Atomic Command %d: %s\n", i + 1, cmdGroup->atomicArr[i]->atomicString);
+        if (i < cmdGroup->sepArrIndex) {
+            printf("Separator %d: %s\n", i + 1, cmdGroup->separatorArr[i]);
         }
     }
 
@@ -430,7 +488,7 @@ void testTokenizeShellAndCmdGroup() {
         struct cmd_group* cmdGroup = shellResult->cmdGroupArr[i];
         printf("Command Group %d: %s\n", i + 1, cmdGroup->cmdString);
 
-        struct cmd_group* cmdGroupResult = tokenizeCmdGroup(cmdGroup->cmdString);
+        struct cmd_group* cmdGroupResult = tokenizeCmdGroup(cmdGroup);
         if (cmdGroupResult == NULL) {
             printf("Cmd group tokenization failed for command group %d.\n", i + 1);
             continue;
@@ -452,7 +510,9 @@ void testTokenizeShellAndCmdGroup() {
 
 void testTokenizeAtomic() {
     char* testAtomic = "ls -l  >> name.txt";
-    struct atomic* result = tokenizeAtomic(testAtomic);
+    struct atomic* result = (struct atomic*)malloc(sizeof(struct atomic));
+    result->atomicString = testAtomic;
+    result = tokenizeAtomic(result);
 
     if (result == NULL) {
         printf("Tokenization failed.\n");
@@ -475,7 +535,7 @@ void printIndent(int level) {
 }
 
 void testAllTokenizers(){
-    char* shell_cmd = "ls -l ;; echo Hello & & pwd";
+    char* shell_cmd = "cat file.txt | grep error > errors.txt";
     printf("{\n");
     printf("  \"shell_cmd\": \"%s\",\n", shell_cmd);
 
@@ -491,13 +551,13 @@ void testAllTokenizers(){
         printIndent(2);
         printf("{\n");
         printIndent(3);
-        printf("\"cmd_group\": \"%s\",\n", shellResult->cmdGroupArr[i]->cmdString);
+        printf("\"cmd_group_string\": \"%s\",\n", shellResult->cmdGroupArr[i]->cmdString);
         if (i < shellResult->sepArrIndex) {
             printIndent(3);
             printf("\"separator\": \"%s\",\n", shellResult->separatorArr[i]);
         }
 
-        struct cmd_group* cmdGroupResult = tokenizeCmdGroup(shellResult->cmdGroupArr[i]->cmdString);
+        struct cmd_group* cmdGroupResult = tokenizeCmdGroup(shellResult->cmdGroupArr[i]);
         if (cmdGroupResult == NULL) {
             printIndent(3);
             printf("\"error\": \"Cmd group tokenization failed\"\n");
@@ -518,7 +578,7 @@ void testAllTokenizers(){
                 printf("\"separator\": \"%s\",\n", cmdGroupResult->separatorArr[j]);
             }
 
-            struct atomic* atomicResult = tokenizeAtomic(cmdGroupResult->atomicArr[j]->atomicString);
+            struct atomic* atomicResult = tokenizeAtomic(cmdGroupResult->atomicArr[j]);
             if (atomicResult == NULL) {
                 printIndent(5);
                 printf("\"error\": \"Atomic tokenization failed\"\n");
@@ -551,27 +611,27 @@ void testAllTokenizers(){
     printf("}\n");
 }
 
-void verifyCommand(char* inputCommand){
-    char* shell_cmd = inputCommand; // You can change this to test other commands
-    printf("Input Command: %s\n", shell_cmd);
+struct shell_cmd* verifyCommand(char* inputCommand){
+    char* shell_cmd = inputCommand;
     struct shell_cmd* shellResult = tokenizeShellCommand(shell_cmd);
     if (shellResult == NULL) {
         printf("Shell command tokenization failed.\n");
-        return;
+        return NULL;
     }
 
     for (int i = 0; i < shellResult->cmdArrIndex; i++) {
-        struct cmd_group* cmdGroupResult = tokenizeCmdGroup(shellResult->cmdGroupArr[i]->cmdString);
+        //printf("Tokenizing command group %d of %d: %s\n", i+1, shellResult->cmdArrIndex, shellResult->cmdGroupArr[i]->cmdString);
+        struct cmd_group* cmdGroupResult = tokenizeCmdGroup(shellResult->cmdGroupArr[i]);
         if (cmdGroupResult == NULL) {
             printf("Cmd group tokenization failed for command group %d.\n", i + 1);
-            return;
+            return shellResult;
         }
         shellResult->cmdGroupArr[i] = cmdGroupResult;
         for (int j = 0; j < cmdGroupResult->atomicArrIndex; j++) {
-            struct atomic* atomicResult = tokenizeAtomic(cmdGroupResult->atomicArr[j]->atomicString);
+            struct atomic* atomicResult = tokenizeAtomic(cmdGroupResult->atomicArr[j]);
             if (atomicResult == NULL) {
                 printf("Atomic tokenization failed for atomic command %d in command group %d.\n", j + 1, i + 1);
-                return;
+                return shellResult;
             }
             cmdGroupResult->atomicArr[j] = atomicResult;
         }
@@ -582,16 +642,15 @@ void verifyCommand(char* inputCommand){
     bool valid = checkShellCmd(shellResult);
 
     if (valid) {
-        printf("Valid Syntax!\n");
+        //printf("Valid Syntax!\n");
     } else {
         printf("Invalid Syntax!\n");
     }
+    return shellResult;
 
-    // Free allocated memory for shellResult and its children here
 }
 
 // int main() {
-//     char* inputCommand = "ls -l | | grep txt";
-//     verifyCommand(inputCommand);
+//     testAllTokenizers();
 //     return 0;
 // }

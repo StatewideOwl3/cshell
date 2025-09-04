@@ -56,7 +56,7 @@ bool checkShellCmd(struct shell_cmd* shellCommand);
     separator arrays.
 */
 
-struct cmd_group* tokenizeCmdGroup(char* cmdString);
+struct cmd_group* tokenizeCmdGroup(struct cmd_group* cmdGroup);
 
 bool checkCmdGroup(struct cmd_group* cmdGroup);
 
@@ -66,7 +66,7 @@ bool checkCmdGroup(struct cmd_group* cmdGroup);
     separator arrays.
 */
 
-struct atomic* tokenizeAtomic(char* atomicString);
+struct atomic* tokenizeAtomic(struct atomic* atomicGroup);
 
 bool checkAtomic(struct atomic* atomicGroup);
 
@@ -75,9 +75,9 @@ bool checkAtomic(struct atomic* atomicGroup);
 bool checkTerminals(char* terminal);
 
 
+struct shell_cmd* verifyCommand(char* inputCommand);
 
 
-void verifyCommand(char* inputCommand);
 void testAllTokenizers();
 void testTokenizeShellCommand();
 void testTokenizeCmdGroup();
