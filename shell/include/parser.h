@@ -32,10 +32,17 @@ struct atomic{
 
     char* atomicString;
     bool validity;
-    char** terminalArr; // array of name types
+    struct terminal** terminalArr; // array of name types
     char** separatorArr;
     int termArrIndex;
     int sepArrIndex;
+};
+
+struct terminal{
+    char* terminalString; // string of the terminal to tokenize further
+    char** cmdAndArgs; // array of strings
+    int cmdAndArgsIndex;
+    bool validity;
 };
 
 
@@ -72,7 +79,10 @@ bool checkAtomic(struct atomic* atomicGroup);
 
 
 
+struct terminal* tokenizeTerminal(struct terminal* terminalGroup);
+
 bool checkTerminals(char* terminal);
+
 
 
 struct shell_cmd* verifyCommand(char* inputCommand);

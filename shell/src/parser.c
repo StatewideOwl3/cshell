@@ -1,6 +1,27 @@
 #include "../include/parser.h"
 
 
+void freeTerminal(struct terminal* terminalGroup){
+    if (terminalGroup == NULL) return;
+
+    // Free terminalString
+    if (terminalGroup->terminalString != NULL) {
+        free(terminalGroup->terminalString);
+    }
+
+    // Free cmdAndArgs
+    if (terminalGroup->cmdAndArgs != NULL) {
+        for (int i = 0; i < terminalGroup->cmdAndArgsIndex; i++) {
+            if (terminalGroup->cmdAndArgs[i] != NULL) {
+                free(terminalGroup->cmdAndArgs[i]);
+            }
+        }
+        free(terminalGroup->cmdAndArgs);
+    }
+    // Finally, free the terminalGroup struct itself
+    free(terminalGroup);
+}
+
 void freeAtomic(struct atomic* atomicGroup){
     if (atomicGroup == NULL) return;
 
@@ -13,7 +34,7 @@ void freeAtomic(struct atomic* atomicGroup){
     if (atomicGroup->terminalArr != NULL) {
         for (int i = 0; i < atomicGroup->termArrIndex; i++) {
             if (atomicGroup->terminalArr[i] != NULL) {
-                free(atomicGroup->terminalArr[i]);
+                freeTerminal(atomicGroup->terminalArr[i]);
             }
         }
         free(atomicGroup->terminalArr);
@@ -403,7 +424,7 @@ struct atomic* tokenizeAtomic(struct atomic* atomicGroup){
 
     // Allocate initial memory for terminalArr and separatorArr
     int initialSize = 10; // Initial size, can be adjusted
-    atomicGroup->terminalArr = (char**)malloc(initialSize * sizeof(char*));
+    atomicGroup->terminalArr = (struct terminal**)malloc(initialSize * sizeof(struct terminal*));
     atomicGroup->separatorArr = (char**)malloc(initialSize * sizeof(char*));
     if (atomicGroup->terminalArr == NULL || atomicGroup->separatorArr == NULL) {
         perror("Failed to allocate memory for terminalArr or separatorArr");
@@ -430,14 +451,15 @@ struct atomic* tokenizeAtomic(struct atomic* atomicGroup){
 
         int termInstanceEnd = i;
         int termInstanceLength = termInstanceEnd - termInstanceStart;
-        char* terminalInstance = (char*)malloc((termInstanceLength + 1) * sizeof(char));
+        struct terminal* terminalInstance = (struct terminal*)malloc(sizeof(struct terminal));
+        terminalInstance->terminalString = (char*)malloc((termInstanceLength + 1) * sizeof(char));
         if (terminalInstance == NULL) {
             perror("Failed to allocate memory for terminalInstance");
             // functions to free memory at each level
             return NULL;
         }
-        strncpy(terminalInstance, &atomicString[termInstanceStart], termInstanceLength);
-        terminalInstance[termInstanceLength] = '\0'; // null-terminate the string
+        strncpy(terminalInstance->terminalString, &atomicString[termInstanceStart], termInstanceLength);
+        terminalInstance->terminalString[termInstanceLength] = '\0'; // null-terminate the string
 
 
         char* separatorChar = (char*)malloc(2 * sizeof(char));
@@ -467,7 +489,7 @@ struct atomic* tokenizeAtomic(struct atomic* atomicGroup){
         if (atomicGroup->termArrIndex >= initialSize) {
             // Reallocate memory if needed
             initialSize *= 2;
-            atomicGroup->terminalArr = (char**)realloc(atomicGroup->terminalArr, initialSize * sizeof(char*));
+            atomicGroup->terminalArr = (struct terminal**)realloc(atomicGroup->terminalArr, initialSize * sizeof(struct terminal*));
             atomicGroup->separatorArr = (char**)realloc(atomicGroup->separatorArr, initialSize * sizeof(char*));
             if (atomicGroup->terminalArr == NULL || atomicGroup->separatorArr == NULL) {
                 perror("Failed to reallocate memory for terminalArr or separatorArr");
@@ -493,7 +515,7 @@ bool checkAtomic(struct atomic* atomicGroup){
 
     // Check each terminal for validity 
     for (int i = 0; i < atomicGroup->termArrIndex; i++) {
-        if (!checkTerminals(atomicGroup->terminalArr[i])) {
+        if (!checkTerminals(atomicGroup->terminalArr[i]->terminalString)) {
             return false;
         }
     }
@@ -506,6 +528,51 @@ bool checkAtomic(struct atomic* atomicGroup){
 }
 
 
+struct terminal* tokenizeTerminal(struct terminal* terminalGroup){
+    char* terminalString = terminalGroup->terminalString;
+    int length = strlen(terminalString);
+
+    terminalGroup->cmdAndArgs = (char**)malloc(10 * sizeof(char*)); // Initial size
+    terminalGroup->cmdAndArgsIndex = 0;
+    if (terminalGroup->cmdAndArgs == NULL) {
+        perror("Failed to allocate memory for cmdAndArgs");
+        return NULL;
+    }
+
+    for (int i = 0; i < length; i++) {
+        if (isWhitespace(terminalString[i])) {
+            // Skip whitespace
+            continue;
+        }
+        // Here you can add more logic to tokenize the terminal string if needed
+        int tokenStart = i;
+        while (i < length && !isWhitespace(terminalString[i])) {
+            i++;
+        }
+        int tokenLength = i - tokenStart;
+        char* token = (char*)malloc((tokenLength + 1) * sizeof(char));
+        if (token == NULL) {
+            perror("Failed to allocate memory for token");
+            return NULL;
+        }
+        strncpy(token, &terminalString[tokenStart], tokenLength);
+        token[tokenLength] = '\0'; // Null-terminate the string
+
+        // Store the token in terminalGroup
+        if (terminalGroup->cmdAndArgsIndex >= 10) {
+            // Reallocate if needed
+            terminalGroup->cmdAndArgs = (char**)realloc(terminalGroup->cmdAndArgs, (terminalGroup->cmdAndArgsIndex + 10) * sizeof(char*));
+            if (terminalGroup->cmdAndArgs == NULL) {
+                perror("Failed to reallocate memory for cmdAndArgs array");
+                return NULL;
+            }
+        }
+
+        terminalGroup->cmdAndArgs[terminalGroup->cmdAndArgsIndex++] = token;
+    }
+
+    return terminalGroup;
+}
 
 bool checkTerminals(char* terminal){
     // should not be empty or just whitespace
@@ -612,7 +679,7 @@ void testTokenizeAtomic() {
 
     printf("Number of terminals: %d\n", result->termArrIndex);
     for (int i = 0; i < result->termArrIndex; i++) {
-        printf("Terminal %d: %s\n", i + 1, result->terminalArr[i]);
+        printf("Terminal %d: %s\n", i + 1, result->terminalArr[i]->terminalString);
         if (i < result->sepArrIndex) {
             printf("Separator %d: %s\n", i + 1, result->separatorArr[i]);
         }
@@ -626,7 +693,7 @@ void printIndent(int level) {
 }
 
 void testAllTokenizers(){
-    char* shell_cmd = "cat file.txt | grep error > errors.txt";
+    char* shell_cmd = "cat file.txt | grep error > errors.txt; hop src - ..";
     printf("{\n");
     printf("  \"shell_cmd\": \"%s\",\n", shell_cmd);
 
@@ -682,11 +749,20 @@ void testAllTokenizers(){
             printf("\"terminals\": [\n");
             for (int k = 0; k < atomicResult->termArrIndex; k++) {
                 printIndent(6);
-                printf("{ \"terminal\": \"%s\"", atomicResult->terminalArr[k]);
+                struct terminal* terminalResult = tokenizeTerminal(atomicResult->terminalArr[k]);
+                if (terminalResult == NULL) {
+                    printf("{ \"error\": \"Terminal tokenization failed\" }%s\n", (k == atomicResult->termArrIndex - 1) ? "" : ",");
+                    continue;
+                }
+                printf("{ \"terminal\": \"%s\"", terminalResult->terminalString);
                 if (k < atomicResult->sepArrIndex && atomicResult->separatorArr[k][0] != '\0') {
                     printf(", \"separator\": \"%s\"", atomicResult->separatorArr[k]);
                 }
-                printf(" }%s\n", (k == atomicResult->termArrIndex - 1) ? "" : ",");
+                printf(", \"cmdAndArgs\": [");
+                for (int m = 0; m < terminalResult->cmdAndArgsIndex; m++) {
+                    printf("\"%s\"%s", terminalResult->cmdAndArgs[m], (m == terminalResult->cmdAndArgsIndex - 1) ? "" : ", ");
+                }
+                printf("] }%s\n", (k == atomicResult->termArrIndex - 1) ? "" : ",");
             }
             printIndent(5);
             printf("]\n");
@@ -725,6 +801,14 @@ struct shell_cmd* verifyCommand(char* inputCommand){
                 return shellResult;
             }
             cmdGroupResult->atomicArr[j] = atomicResult;
+            for (int k = 0; k < atomicResult->termArrIndex; k++) {
+                struct terminal* terminalResult = tokenizeTerminal(atomicResult->terminalArr[k]);
+                if (terminalResult == NULL) {
+                    printf("Terminal tokenization failed for terminal %d in atomic command %d of command group %d.\n", k + 1, j + 1, i + 1);
+                    return shellResult;
+                }
+                atomicResult->terminalArr[k] = terminalResult;
+            }
         }
     }
 
@@ -741,7 +825,7 @@ struct shell_cmd* verifyCommand(char* inputCommand){
 
 }
 
-// int main() {
-//     testAllTokenizers();
-//     return 0;
-// }
+int main() {
+    testAllTokenizers();
+    return 0;
+}

@@ -9,15 +9,16 @@
 
 #include "../include/printPrompt.h"
 #include "../include/parser.h"
+#include "../include/hop.h"
 
 int main(){
-    // Store the directory path in which the shell is started in
-    char* absolutePath = NULL; ; // POSIX 2001 can dynamically allocate memory for the path
-    absolutePath = getcwd(absolutePath, 0);
-    if (absolutePath== NULL){
+    // Store the directory path in which the shell is started in 
+
+    absoluteHomePath = getcwd(NULL, 0);
+    if (absoluteHomePath == NULL){
         perror("getcwd() error");
         exit(1);
-    };    
+    };
 
     char* username = getlogin();
     if (username == NULL){
@@ -39,7 +40,7 @@ int main(){
             exit(1);
         };
         
-        char* pathToPrint = getPathToPrint(absolutePath, currentPath);
+        char* pathToPrint = getPathToPrint(absoluteHomePath, currentPath);
         
         printf("<%s@%s:%s>",username, sysinfo->nodename, pathToPrint);
         fflush(stdout); // Ensure the prompt is displayed immediately
@@ -58,13 +59,18 @@ int main(){
         // Verify user command:
         printf("INPUT SCANNED: %s\n",input);
         struct shell_cmd* shellCmdStruct = verifyCommand(input);
+        if (shellCmdStruct->validity == false){
+            freeShellCmd(shellCmdStruct);
+            continue;
+        }
         
         // Process user command
+        executeCommand(shellCmdStruct);
         
 
         // Free memory allocations at each level
         freeShellCmd(shellCmdStruct);
-
+        
         // Repeat
     }
     return 0;
