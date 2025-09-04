@@ -1,3 +1,7 @@
+#ifndef PARSER_H
+#define PARSER_H
+
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -102,3 +106,5 @@ bool isWhitespace(char c);
 void freeAtomic(struct atomic* atomicGroup);
 void freeCmdGroup(struct cmd_group* cmdGroup);
 void freeShellCmd(struct shell_cmd* shellCommand);
+
+#endif // PARSER_H

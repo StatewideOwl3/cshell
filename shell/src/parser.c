@@ -825,7 +825,7 @@ struct shell_cmd* verifyCommand(char* inputCommand){
 
 }
 
-int main() {
-    testAllTokenizers();
-    return 0;
-}
+// int main() {
+//     testAllTokenizers();
+//     return 0;
+// }

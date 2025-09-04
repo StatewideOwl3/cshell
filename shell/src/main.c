@@ -10,6 +10,7 @@
 #include "../include/printPrompt.h"
 #include "../include/parser.h"
 #include "../include/hop.h"
+#include "../include/executes.h"
 
 int main(){
     // Store the directory path in which the shell is started in 
@@ -34,7 +35,7 @@ int main(){
         // Ready to accept commands:
         // Collect current working directory and username:
         char *currentPath = NULL;
-        currentPath = getcwd(currentPath, 0);
+        currentPath = getcwd(NULL, 0);
         if (currentPath== NULL){
             perror("getcwd() error");
             exit(1);
