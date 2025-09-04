@@ -1,5 +1,96 @@
 #include "../include/parser.h"
 
+
+void freeAtomic(struct atomic* atomicGroup){
+    if (atomicGroup == NULL) return;
+
+    // Free atomicString
+    if (atomicGroup->atomicString != NULL) {
+        free(atomicGroup->atomicString);
+    }
+
+    // Free terminalArr
+    if (atomicGroup->terminalArr != NULL) {
+        for (int i = 0; i < atomicGroup->termArrIndex; i++) {
+            if (atomicGroup->terminalArr[i] != NULL) {
+                free(atomicGroup->terminalArr[i]);
+            }
+        }
+        free(atomicGroup->terminalArr);
+    }
+
+    // Free separatorArr
+    if (atomicGroup->separatorArr != NULL) {
+        for (int i = 0; i < atomicGroup->sepArrIndex; i++) {
+            if (atomicGroup->separatorArr[i] != NULL) {
+                free(atomicGroup->separatorArr[i]);
+            }
+        }
+        free(atomicGroup->separatorArr);
+    }
+    // Finally, free the atomicGroup struct itself
+    free(atomicGroup);
+}
+
+void freeCmdGroup(struct cmd_group* cmdGroup){
+    if (cmdGroup == NULL) return;
+
+    // Free cmdString
+    if (cmdGroup->cmdString != NULL) {
+        free(cmdGroup->cmdString);
+    }
+
+    // Free atomicArr
+    if (cmdGroup->atomicArr != NULL) {
+        for (int i = 0; i < cmdGroup->atomicArrIndex; i++) {
+            if (cmdGroup->atomicArr[i] != NULL) {
+                freeAtomic(cmdGroup->atomicArr[i]);
+            }
+        }
+        free(cmdGroup->atomicArr);
+    }
+
+    // Free separatorArr
+    if (cmdGroup->separatorArr != NULL) {
+        for (int i = 0; i < cmdGroup->sepArrIndex; i++) {
+            if (cmdGroup->separatorArr[i] != NULL) {
+                free(cmdGroup->separatorArr[i]);
+            }
+        }
+        free(cmdGroup->separatorArr);
+    }
+    // Finally, free the cmdGroup struct itself
+    free(cmdGroup);
+}
+
+void freeShellCmd(struct shell_cmd* shellCommand){
+    if (shellCommand == NULL) return;
+
+    // Free cmdGroupArr
+    if (shellCommand->cmdGroupArr != NULL) {
+        for (int i = 0; i < shellCommand->cmdArrIndex; i++) {
+            if (shellCommand->cmdGroupArr[i] != NULL) {
+                freeCmdGroup(shellCommand->cmdGroupArr[i]);
+            }
+        }
+        free(shellCommand->cmdGroupArr);
+    }
+
+    // Free separatorArr
+    if (shellCommand->separatorArr != NULL) {
+        for (int i = 0; i < shellCommand->sepArrIndex; i++) {
+            if (shellCommand->separatorArr[i] != NULL) {
+                free(shellCommand->separatorArr[i]);
+            }
+        }
+        free(shellCommand->separatorArr);
+    }
+    // Finally, free the shellCommand struct itself
+    free(shellCommand);
+}
+
+
+
 /*
     tokenize the shell command into cmd_groups and separators
     build an array of cmd_group struct pointers filled in with details and separators 

@@ -60,10 +60,10 @@ int main(){
         struct shell_cmd* shellCmdStruct = verifyCommand(input);
         
         // Process user command
-
+        
 
         // Free memory allocations at each level
-
+        freeShellCmd(shellCmdStruct);
 
         // Repeat
     }

@@ -86,3 +86,9 @@ void testTokenizeShellAndCmdGroup();
 
 void printIndent(int n);
 bool isWhitespace(char c);
+
+
+
+void freeAtomic(struct atomic* atomicGroup);
+void freeCmdGroup(struct cmd_group* cmdGroup);
+void freeShellCmd(struct shell_cmd* shellCommand);
