@@ -16,21 +16,22 @@ bool isSubstring(char* absPath, char* currPath){
 }
 
 char* getPathToPrint(char* absPath, char* currPath){
-    //printf("enetered get path to print\n");
-    // Check if absPath is a substring of currPath
-    
     if (isSubstring(absPath, currPath)){
-        // Return the substring of currPath that comes after absPath
-        //printf("absPath is a substring of currPath\n");
-        //printf("absPath: %s, currPath: %s\n", absPath, currPath);
-        char* newPath = (char*)malloc(sizeof(char)*(strlen(currPath) - strlen(absPath) + 2)); // +2 for '~' and null terminator
-        newPath[0]='~';
-        strncpy(newPath + 1, currPath + strlen(absPath), strlen(newPath)-1);
-        //printf("newPath: %s\n", newPath);
+        size_t remainingLen = strlen(currPath) - strlen(absPath);
+        char* newPath = (char*)malloc(remainingLen + 2); // +1 for '~', +1 for null terminator
+        if (newPath == NULL) {
+            perror("malloc failed");
+            return NULL;
+        }
+        newPath[0] = '~';
+        strcpy(newPath + 1, currPath + strlen(absPath));
         return newPath;
     } else {
-        // If absPath is not a substring, return currPath as is
-        char* newPath = (char*)malloc(sizeof(char)*(strlen(currPath)+1));
+        char* newPath = (char*)malloc(strlen(currPath) + 1);
+        if (newPath == NULL) {
+            perror("malloc failed");
+            return NULL;
+        }
         strcpy(newPath, currPath);
         return newPath;
     }

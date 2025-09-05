@@ -65,15 +65,6 @@ void executeHop(struct shell_cmd* shellCommandStruct){
                 return;
             }
         }
-        else if (args[i][0] == '/') {
-            // absolute path, go to specified directory
-            if (chdir(args[i]) != 0) {
-                printf("No such directory!\n");
-                chdir(currentWD); // revert to current directory
-                free(currentWD);
-                return;
-            }
-        }
         else {
             // go to specified directory
             if (chdir(args[i]) != 0) {
@@ -96,6 +87,39 @@ void executeHop(struct shell_cmd* shellCommandStruct){
 }
 
 
+bool checkRevealSyntax(struct shell_cmd* shellCommandStruct) {
+    struct cmd_group* cmdGroup = shellCommandStruct->cmdGroupArr[0];
+    struct atomic* atomicGroup = cmdGroup->atomicArr[0];
+    struct terminal* terminalCmd = atomicGroup->terminalArr[0];
+    int argCount = terminalCmd->cmdAndArgsIndex;
+    char** args = terminalCmd->cmdAndArgs;
+
+    // Must have at least the command "reveal"
+    if (argCount < 1 || strcmp(args[0], "reveal") != 0) {
+        return false;
+    }
+
+    int pathFound = 0;
+    for (int i = 1; i < argCount; i++) {
+        if (args[i][0] == '-') {
+            // Check if it's a valid flag: - followed by a, l, or combinations
+            for (int j = 1; args[i][j] != '\0'; j++) {
+                if (args[i][j] != 'a' && args[i][j] != 'l') {
+                    return false; // Invalid character in flag
+                }
+            }
+        } else {
+            // This should be the path, and only one path allowed
+            if (pathFound) {
+                return false; // Multiple paths
+            }
+            pathFound = 1;
+            // Path can be ~, ., .., -, or any name (no validation on name here)
+        }
+    }
+    return true;
+}
+
 void executeReveal(struct shell_cmd* shellCommandStruct){
     struct cmd_group* cmdGroup = shellCommandStruct->cmdGroupArr[0];
     struct atomic* atomicGroup = cmdGroup->atomicArr[0];
@@ -103,7 +127,7 @@ void executeReveal(struct shell_cmd* shellCommandStruct){
     int argCount = terminalCmd->cmdAndArgsIndex;
     char** args = terminalCmd->cmdAndArgs;
 
-    if (argCount > 4) {
+    if (!checkRevealSyntax(shellCommandStruct)) {
         printf("reveal: Invalid Syntax!\n");
         return;
     }
@@ -114,13 +138,13 @@ void executeReveal(struct shell_cmd* shellCommandStruct){
     char* dirPath = NULL;
 
     for (int i = 1; i < argCount; i++) {
-        if (strcmp(args[i], "-a") == 0) {
+        if (args[i][0]=='-' && strstr(args[i], "a") != NULL) {
             allFlag = 1;
         } 
-        else if (strcmp(args[i], "-l") == 0) {
+        if (args[i][0]=='-' && strstr(args[i], "l") != NULL) {
             lineFlag = 1;
         }
-        else if (strcmp(args[i], "-al") == 0 || strcmp(args[i], "-la") == 0) {
+        if (args[i][0]=='-' && ((strstr(args[i], "al") != NULL || strstr(args[i], "la") != NULL))) {
             allFlag = 1;
             lineFlag = 1;
         }
@@ -149,20 +173,25 @@ void executeReveal(struct shell_cmd* shellCommandStruct){
                 return;
             }
         }
-        else {
+        else if (args[i][0] != '-') {
             dirPath = args[i];
         }
     }
 
-    if (dirPath == NULL)
-        dirPath = absoluteHomePath;
+    if (dirPath == NULL){
+        dirPath = getcwd(NULL, 0);
+        if (dirPath == NULL) {
+            perror("getcwd() failed for CWD");
+            return;
+        }
+        //printf("DEBUG: dirPath set to CWD: %s\n", dirPath);  // Add this for debugging
+    }
 
-    DIR* dir;
+    DIR* dir = opendir(dirPath);
     struct dirent* entry;
-
-    dir = opendir(dirPath);
     if (dir == NULL) {
-        printf("No such directory!\n");
+        perror("opendir() failed");
+        //printf("DEBUG: dirPath was: %s\n", dirPath);  // Add this
         return;
     }
 
@@ -186,3 +215,4 @@ void executeReveal(struct shell_cmd* shellCommandStruct){
     closedir(dir);
     return;
 }
+
