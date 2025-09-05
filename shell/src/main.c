@@ -12,9 +12,11 @@
 #include "../include/partB.h"
 #include "../include/executes.h"
 
+extern pid_t mainPid;
+
 int main(){
     // Store the directory path in which the shell is started in 
-
+    mainPid = getpid();
     absoluteHomePath = getcwd(NULL, 0);
     if (absoluteHomePath == NULL){
         perror("getcwd() error");

@@ -13,4 +13,13 @@ void executeCommand(struct shell_cmd* shellCommandStruct){
         executeReveal(shellCommandStruct);
         return;
     }
+
+    for (int i = 0; i < shellCommandStruct->cmdArrIndex; i++){
+        struct cmd_group* cmdGroup = shellCommandStruct->cmdGroupArr[i];
+        for (int j = 0; j < cmdGroup->atomicArrIndex; j++){
+            struct atomic* atomicCmdStruct = cmdGroup->atomicArr[j];
+            executeAtomicCmd(atomicCmdStruct);
+        }
+        break;
+    }   
 }
