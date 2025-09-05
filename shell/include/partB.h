@@ -5,6 +5,8 @@
 #include <stdbool.h>
 
 #include <unistd.h>
+#include <dirent.h>
+#include <sys/types.h>
 
 #include "printPrompt.h"
 #include "parser.h"
@@ -15,3 +17,4 @@ extern char* oldWD;
 
 void executeHop(struct shell_cmd* shellCommandStruct);
 
+void executeReveal(struct shell_cmd* shellCommandStruct);
