@@ -15,6 +15,10 @@ extern char* absoluteHomePath; // Global variable to hold the absolute home path
 
 extern char* oldWD;
 
-void executeHop(struct shell_cmd* shellCommandStruct);
+void executeHop(struct atomic* atomicCmd);
 
-void executeReveal(struct shell_cmd* shellCommandStruct);
+void executeReveal(struct atomic* atomicCmd);
+
+bool checkRevealSyntax(struct atomic* atomicGroup);
+
+void executeLog(struct atomic* atomicCmd);

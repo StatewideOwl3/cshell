@@ -15,7 +15,7 @@ struct shell_cmd{
 
     bool validity;
     struct cmd_group** cmdGroupArr; // array of pointers to cmd_group tokens
-    char** separatorArr;
+    char** separatorArr; // & or ;
     int cmdArrIndex;
     int sepArrIndex;
 };
@@ -25,7 +25,7 @@ struct cmd_group{
     char* cmdString;
     bool validity;
     struct atomic** atomicArr;
-    char** separatorArr; 
+    char** separatorArr; // | only
     int atomicArrIndex;
     int sepArrIndex;
     
@@ -36,7 +36,7 @@ struct atomic{
     char* atomicString;
     bool validity;
     struct terminal** terminalArr; // array of name types
-    char** separatorArr;
+    char** separatorArr; // <, >, >>
     int termArrIndex;
     int sepArrIndex;
 };
@@ -84,7 +84,7 @@ bool checkAtomic(struct atomic* atomicGroup);
 
 struct terminal* tokenizeTerminal(struct terminal* terminalGroup);
 
-bool checkTerminals(char* terminal);
+bool checkTerminals(struct terminal* terminalStruct);
 
 
 

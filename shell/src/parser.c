@@ -515,7 +515,7 @@ bool checkAtomic(struct atomic* atomicGroup){
 
     // Check each terminal for validity 
     for (int i = 0; i < atomicGroup->termArrIndex; i++) {
-        if (!checkTerminals(atomicGroup->terminalArr[i]->terminalString)) {
+        if (!checkTerminals(atomicGroup->terminalArr[i])) {
             return false;
         }
     }
@@ -570,22 +570,25 @@ struct terminal* tokenizeTerminal(struct terminal* terminalGroup){
 
         terminalGroup->cmdAndArgs[terminalGroup->cmdAndArgsIndex++] = token;
     }
-
+    terminalGroup->cmdAndArgs[terminalGroup->cmdAndArgsIndex] = NULL; // Null-terminate the array of strings
     return terminalGroup;
 }
 
-bool checkTerminals(char* terminal){
+bool checkTerminals(struct terminal* terminalStruct){
     // should not be empty or just whitespace
-    if (terminal == NULL || strlen(terminal) == 0) return false;
-
-    // should be in the scanset of valid characters r"[^|;&<>]+"
-    int length = strlen(terminal);
-    for (int i = 0; i < length; i++) {
-        char c = terminal[i];
-        if (c == '|' || c == ';' || c == '&' || c == '<' || c == '>') {
-            return false;
+    for (int i = 0; i < terminalStruct->cmdAndArgsIndex; i++) {
+        char* terminal = terminalStruct->cmdAndArgs[i];
+        if (terminal == NULL || strlen(terminal) == 0) return false;
+        // should be in the scanset of valid characters r"[^|;&<>]+"
+        int length = strlen(terminal);
+        for (int i = 0; i < length; i++) {
+            char c = terminal[i];
+            if (c == '|' || c == ';' || c == '&' || c == '<' || c == '>') {
+                return false;
+            }
         }
     }
+    terminalStruct->validity = true;
     return true;
 }
 

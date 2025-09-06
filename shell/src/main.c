@@ -12,8 +12,6 @@
 #include "../include/partB.h"
 #include "../include/executes.h"
 
-extern pid_t mainPid;
-
 int main(){
     // Store the directory path in which the shell is started in 
     mainPid = getpid();
@@ -36,6 +34,8 @@ int main(){
     while(1){
         // Ready to accept commands:
         // Collect current working directory and username:
+        bg_fork = 0; // Global variable to indicate background process
+        pipe_exists = 0;
         char *currentPath = NULL;
         currentPath = getcwd(NULL, 0);
         if (currentPath== NULL){
@@ -45,8 +45,11 @@ int main(){
         
         char* pathToPrint = getPathToPrint(absoluteHomePath, currentPath);
         
-        printf("<%s@%s:%s>",username, sysinfo->nodename, pathToPrint);
-        fflush(stdout); // Ensure the prompt is displayed immediately
+        // Only print the prompt when running interactively (stdin is a terminal).
+        if (isatty(STDIN_FILENO)){
+            printf("<%s@%s:%s>",username, sysinfo->nodename, pathToPrint);
+            fflush(stdout); // Ensure the prompt is displayed immediately
+        }
         
         free(pathToPrint); // Free memory
         free(currentPath);
@@ -68,7 +71,7 @@ int main(){
         }
         
         // Process user command
-        executeCommand(shellCmdStruct);
+        executeShellCommand(shellCmdStruct);
         
 
         // Free memory allocations at each level

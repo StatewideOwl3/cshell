@@ -5,7 +5,7 @@ char* absoluteHomePath = NULL; // Global variable to hold the absolute home path
 
 char* oldWD = NULL;
 
-void executeHop(struct shell_cmd* shellCommandStruct){
+void executeHop(struct atomic* atomicCmd){
     //printf("entered executeHop\n");
     char* currentWD = getcwd(NULL, 0);
     if (currentWD == NULL){
@@ -13,8 +13,6 @@ void executeHop(struct shell_cmd* shellCommandStruct){
         return;
     }
 
-    struct cmd_group* cmdGroup = shellCommandStruct->cmdGroupArr[0];
-    struct atomic* atomicCmd = cmdGroup->atomicArr[0];
     struct terminal* terminalCmd = atomicCmd->terminalArr[0];
     int argCount = terminalCmd->cmdAndArgsIndex;
     char** args = terminalCmd->cmdAndArgs;
@@ -87,9 +85,7 @@ void executeHop(struct shell_cmd* shellCommandStruct){
 }
 
 
-bool checkRevealSyntax(struct shell_cmd* shellCommandStruct) {
-    struct cmd_group* cmdGroup = shellCommandStruct->cmdGroupArr[0];
-    struct atomic* atomicGroup = cmdGroup->atomicArr[0];
+bool checkRevealSyntax(struct atomic* atomicGroup) {
     struct terminal* terminalCmd = atomicGroup->terminalArr[0];
     int argCount = terminalCmd->cmdAndArgsIndex;
     char** args = terminalCmd->cmdAndArgs;
@@ -120,14 +116,12 @@ bool checkRevealSyntax(struct shell_cmd* shellCommandStruct) {
     return true;
 }
 
-void executeReveal(struct shell_cmd* shellCommandStruct){
-    struct cmd_group* cmdGroup = shellCommandStruct->cmdGroupArr[0];
-    struct atomic* atomicGroup = cmdGroup->atomicArr[0];
+void executeReveal(struct atomic* atomicGroup){
     struct terminal* terminalCmd = atomicGroup->terminalArr[0];
     int argCount = terminalCmd->cmdAndArgsIndex;
     char** args = terminalCmd->cmdAndArgs;
 
-    if (!checkRevealSyntax(shellCommandStruct)) {
+    if (!checkRevealSyntax(atomicGroup)) {
         printf("reveal: Invalid Syntax!\n");
         return;
     }
@@ -214,5 +208,9 @@ void executeReveal(struct shell_cmd* shellCommandStruct){
     }
     closedir(dir);
     return;
+}
+
+void executeLog(struct atomic* atomicCmd){
+    // implement
 }
 
