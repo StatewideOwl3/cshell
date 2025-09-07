@@ -1,9 +1,9 @@
 #include "../include/partB.h"
 
-
 char* absoluteHomePath = NULL; // Global variable to hold the absolute home path
 
 char* oldWD = NULL;
+
 
 void executeHop(struct atomic* atomicCmd){
     //printf("entered executeHop\n");
@@ -83,7 +83,6 @@ void executeHop(struct atomic* atomicCmd){
     }
 
 }
-
 
 bool checkRevealSyntax(struct atomic* atomicGroup) {
     struct terminal* terminalCmd = atomicGroup->terminalArr[0];
@@ -211,6 +210,148 @@ void executeReveal(struct atomic* atomicGroup){
 }
 
 void executeLog(struct atomic* atomicCmd){
-    // implement
+    struct terminal* terminalCmd = atomicCmd->terminalArr[0];
+    int argCount = terminalCmd->cmdAndArgsIndex;
+    char** args = terminalCmd->cmdAndArgs;
+
+    if (argCount == 1) {
+        // No arguments: print the log
+        struct executedShellCommand* current = listHead;
+        int count = 1;
+        while (current != NULL) {
+            printf("%s\n", current->shellCommandString);
+            current = current->next;
+        }
+    } else if (argCount == 2 && strcmp(args[1], "purge") == 0) {
+        // purge: clear the log
+        struct executedShellCommand* current = listHead;
+        while (current != NULL) {
+            struct executedShellCommand* temp = current;
+            current = current->next;
+            free(temp->shellCommandString);
+            free(temp);
+        }
+        listHead = NULL;
+        listTail = NULL;
+        logListSize = 0;
+        saveLog();
+    } else if (argCount == 3 && strcmp(args[1], "execute") == 0) {
+        // execute <index>
+        int index = atoi(args[2]);
+        if (index < 1 || index > logListSize) {
+            fprintf(stderr, "log: invalid index\n");
+            return;
+        }
+        // Find the command: index 1 is newest (tail), index logListSize is oldest (head)
+        int target = logListSize - index + 1; // 1-based from head
+        struct executedShellCommand* current = listHead;
+        for (int i = 1; i < target; i++) {
+            current = current->next;
+        }
+        char* cmd = current->shellCommandString;
+        // Execute without adding to log
+        struct shell_cmd* shellCmdStruct = verifyCommand(cmd);
+        if (shellCmdStruct->validity) {
+            executeShellCommand(shellCmdStruct);
+        }
+        freeShellCmd(shellCmdStruct);
+    } else {
+        printf("log: invalid syntax\n");
+    }
 }
 
+char* logFile = "/home/saikapilbharadwaj/Documents/OSN/mini-project-1-StatewideOwl3/shell/logs.txt";
+int logListSize = 0;
+struct executedShellCommand* listHead = NULL;
+struct executedShellCommand* listTail = NULL;
+
+
+void loadLogs(){
+    FILE* file = fopen(logFile, "r");
+    if (file == NULL) {
+        // If the file doesn't exist, it's not an error; just return
+        return;
+    }
+
+    char buffer[1024];
+    while (fgets(buffer, sizeof(buffer), file)) {
+        // Remove newline character if present
+        size_t len = strlen(buffer);
+        if (len > 0 && buffer[len - 1] == '\n') {
+            buffer[len - 1] = '\0';
+        }
+
+        struct executedShellCommand* newLog = malloc(sizeof(struct executedShellCommand));
+        newLog->shellCommandString = strdup(buffer);
+        newLog->next = NULL;
+
+        if (listHead == NULL) {
+            // If the list is empty, the new log is both the head and tail
+            listHead = newLog;
+            listTail = newLog;
+            logListSize++;
+        } 
+        else if (logListSize < 15) {
+            // Otherwise, append the new log to the end of the list
+            listTail->next = newLog;
+            listTail = newLog;
+            logListSize++;
+        }
+        else if (logListSize >= 15) {
+            // Remove the oldest log (head) and append the new log to the end
+            struct executedShellCommand* temp = listHead;
+            listHead = listHead->next;
+            free(temp->shellCommandString);
+            free(temp);
+            listTail->next = newLog;
+            listTail = newLog;
+        }
+    }
+
+    fclose(file);
+}
+
+void saveLog(){
+    FILE* file = fopen(logFile, "w");
+    if (file == NULL) {
+        perror("Failed to open log file for writing");
+        return;
+    }
+
+    struct executedShellCommand* current = listHead;
+    while (current != NULL) {
+        fprintf(file, "%s\n", current->shellCommandString);
+        current = current->next;
+    }
+
+    fclose(file);
+}
+
+void addLog(char* commandString) {
+    struct executedShellCommand* newLog = malloc(sizeof(struct executedShellCommand));
+    newLog->shellCommandString = strdup(commandString);
+    newLog->next = NULL;
+
+    if (listHead == NULL) {
+        // If the list is empty, the new log is both the head and tail
+        listHead = newLog;
+        listTail = newLog;
+        logListSize++;
+    } 
+    else if (logListSize < 15) {
+        // Otherwise, append the new log to the end of the list
+        listTail->next = newLog;
+        listTail = newLog;
+        logListSize++;
+    }
+    else if (logListSize >= 15) {
+        // Remove the oldest log (head) and append the new log to the end
+        struct executedShellCommand* temp = listHead;
+        listHead = listHead->next;
+        free(temp->shellCommandString);
+        free(temp);
+        listTail->next = newLog;
+        listTail = newLog;
+    }
+    saveLog(); // Save the updated log list to the file
+}

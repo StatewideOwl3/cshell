@@ -1,3 +1,6 @@
+#ifndef EXECUTES_H
+#define EXECUTES_H
+
 #include "parser.h"
 #include "partB.h"
 
@@ -31,4 +34,6 @@ void executeShellCommand(struct shell_cmd* shellCommandStruct);
 void executeCmdGroup(struct cmd_group* cmdGroupStruct);
 
 void executeAtomicCmd(struct atomic* atomicCmdStruct);
+
+#endif // EXECUTES_H
 

@@ -205,7 +205,7 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
     else if (pipe_exists || bg_fork) {
         // We're already inside a forked child set up by the pipeline loop
         // -> just exec directly, no new fork
-        execvp(cmd, args);
+        execvp("/bin/bash", (char*[]){"/bin/bash", "-c", atomicCmdStruct->atomicString, NULL});
         fprintf(stderr, "%s: command not found\n", cmd);
     }
     else {
@@ -215,7 +215,7 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
             perror("fork failed");
             goto restore;
         } else if (pid == 0) {
-            execvp(cmd, args);
+            execvp("/bin/bash", (char*[]){"/bin/bash", "-c", atomicCmdStruct->atomicString, NULL});
             fprintf(stderr, "%s: command not found\n",cmd);
             exit(1);
         } else {

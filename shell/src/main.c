@@ -31,6 +31,8 @@ int main(){
     struct utsname* sysinfo = (struct utsname*)malloc(sizeof(struct utsname));
     uname(sysinfo);
 
+    loadLogs();
+
     while(1){
         // Check for completed background jobs
         check_bg_jobs();
@@ -69,6 +71,11 @@ int main(){
         if (shellCmdStruct->validity == false){
             freeShellCmd(shellCmdStruct);
             continue;
+        }
+        
+        // Add to log if not duplicate and not log command
+        if ((listTail == NULL || strcmp(input, listTail->shellCommandString) != 0) && strstr(input, "log") != input) {
+            addLog(input);
         }
         
         // Process user command
