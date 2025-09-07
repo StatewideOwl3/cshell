@@ -50,7 +50,7 @@ int main(){
         
         // Only print the prompt when running interactively (stdin is a terminal).
         if (isatty(STDIN_FILENO)){
-            printf("<%s@%s:%s>",username, sysinfo->nodename, pathToPrint);
+            printf("<%s@%s:%s> ",username, sysinfo->nodename, pathToPrint);
             fflush(stdout); // Ensure the prompt is displayed immediately
         }
         

@@ -3,6 +3,7 @@
 
 #include "parser.h"
 #include "partB.h"
+#include "partE.h"
 
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -34,6 +35,8 @@ void executeShellCommand(struct shell_cmd* shellCommandStruct);
 void executeCmdGroup(struct cmd_group* cmdGroupStruct);
 
 void executeAtomicCmd(struct atomic* atomicCmdStruct);
+
+void executeActivities(struct atomic* atomicCmdStruct);
 
 #endif // EXECUTES_H
 

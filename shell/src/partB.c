@@ -4,6 +4,10 @@ char* absoluteHomePath = NULL; // Global variable to hold the absolute home path
 
 char* oldWD = NULL;
 
+static int cmp(const void* a, const void* b) {
+    return strcasecmp(*(char**)a, *(char**)b);
+}
+
 
 void executeHop(struct atomic* atomicCmd){
     //printf("entered executeHop\n");
@@ -121,7 +125,7 @@ void executeReveal(struct atomic* atomicGroup){
     char** args = terminalCmd->cmdAndArgs;
 
     if (!checkRevealSyntax(atomicGroup)) {
-        printf("reveal: Invalid Syntax!\n");
+        fprintf(stderr, "reveal: Invalid Syntax!\n");
         return;
     }
 
@@ -155,14 +159,14 @@ void executeReveal(struct atomic* atomicGroup){
         else if (strcmp(args[i], ".") == 0) {
             dirPath = getcwd(NULL, 0);
             if (dirPath == NULL) {
-                perror("getcwd() error");
+                //perror("getcwd() error");
                 return;
             }
         }
         else if (strcmp(args[i], "..") == 0) {
             dirPath = realpath("..", NULL);
             if (dirPath == NULL) {
-                perror("realpath() error");
+                //perror("realpath() error");
                 return;
             }
         }
@@ -174,7 +178,7 @@ void executeReveal(struct atomic* atomicGroup){
     if (dirPath == NULL){
         dirPath = getcwd(NULL, 0);
         if (dirPath == NULL) {
-            perror("getcwd() failed for CWD");
+            //perror("getcwd() failed for CWD");
             return;
         }
         //printf("DEBUG: dirPath set to CWD: %s\n", dirPath);  // Add this for debugging
@@ -183,30 +187,60 @@ void executeReveal(struct atomic* atomicGroup){
     DIR* dir = opendir(dirPath);
     struct dirent* entry;
     if (dir == NULL) {
-        perror("opendir() failed");
+        //perror("opendir() failed");
         //printf("DEBUG: dirPath was: %s\n", dirPath);  // Add this
+        free(dirPath);
         return;
     }
 
-    while((entry = readdir(dir)) != NULL) {
+    // Collect entries
+    char** names = NULL;
+    int count = 0;
+    int capacity = 10;
+    names = malloc(capacity * sizeof(char*));
+    if (!names) {
+        perror("malloc failed");
+        closedir(dir);
+        free(dirPath);
+        return;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
         // Skip hidden files unless -a flag is set
         if (!allFlag && entry->d_name[0] == '.') {
             continue;
         }
-
-        if (lineFlag) {
-            // Print detailed information
-            printf("%s\n", entry->d_name);
-        } else {
-            // Print just the names
-            printf("%s  ", entry->d_name);
+        if (count >= capacity) {
+            capacity *= 2;
+            names = realloc(names, capacity * sizeof(char*));
+            if (!names) {
+                perror("realloc failed");
+                closedir(dir);
+                free(dirPath);
+                return;
+            }
         }
+        names[count++] = strdup(entry->d_name);
+    }
+    closedir(dir);
+
+    // Sort case-insensitively
+    qsort(names, count, sizeof(char*), cmp);
+
+    // Print
+    for (int i = 0; i < count; i++) {
+        if (lineFlag) {
+            printf("%s\n", names[i]);
+        } else {
+            printf("%s  ", names[i]);
+        }
+        free(names[i]);
     }
     if (!lineFlag) {
         printf("\n");
     }
-    closedir(dir);
-    return;
+    free(names);
+    free(dirPath);
 }
 
 void executeLog(struct atomic* atomicCmd){
@@ -267,7 +301,10 @@ struct executedShellCommand* listTail = NULL;
 
 
 void loadLogs(){
-    FILE* file = fopen(absoluteHomePath, "r");
+    char* path = (char*)malloc(strlen(absoluteHomePath) + strlen("/logs.txt") + 1);
+    strcpy(path, absoluteHomePath);
+    strcat(path, "/logs.txt");
+    FILE* file = fopen(logFile, "r");
     if (file == NULL) {
         // If the file doesn't exist, it's not an error; just return
         return;
@@ -312,7 +349,10 @@ void loadLogs(){
 }
 
 void saveLog(){
-    FILE* file = fopen(absoluteHomePath, "w");
+    char* path = (char*)malloc(strlen(absoluteHomePath) + strlen("/logs.txt") + 1);
+    strcpy(path, absoluteHomePath);
+    strcat(path, "/logs.txt");
+    FILE* file = fopen(logFile, "w+");
     if (file == NULL) {
         perror("Failed to open log file for writing");
         return;

@@ -205,7 +205,8 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
     else if (pipe_exists || bg_fork) {
         // We're already inside a forked child set up by the pipeline loop
         // -> just exec directly, no new fork
-        execvp("/bin/bash", (char*[]){"/bin/bash", "-c", atomicCmdStruct->atomicString, NULL});
+        //execvp("/bin/bash", (char*[]){"/bin/bash", "-c", atomicCmdStruct->atomicString, NULL});
+        execvp(cmd, args);
         fprintf(stderr, "%s: command not found\n", cmd);
     }
     else {
@@ -215,7 +216,8 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
             perror("fork failed");
             goto restore;
         } else if (pid == 0) {
-            execvp("/bin/bash", (char*[]){"/bin/bash", "-c", atomicCmdStruct->atomicString, NULL});
+            //execvp("/bin/bash", (char*[]){"/bin/bash", "-c", atomicCmdStruct->atomicString, NULL});
+            execvp(cmd, args);
             fprintf(stderr, "%s: command not found\n",cmd);
             exit(1);
         } else {
@@ -230,3 +232,24 @@ restore:
     close(original_stdin);
     close(original_stdout);
 }
+
+
+void executeActivities(struct atomic* atomicCmdStruct) {
+    if (!atomicCmdStruct || atomicCmdStruct->validity == 0 || atomicCmdStruct->termArrIndex == 0) return;
+
+    struct terminal* firstTerm = atomicCmdStruct->terminalArr[0];
+    if (!firstTerm || firstTerm->cmdAndArgsIndex == 0) return;
+    char** args = firstTerm->cmdAndArgs;
+    char* cmd = args[0];
+
+    if (!strcmp(cmd, "hop")) {
+        executeHop(atomicCmdStruct);
+    } else if (!strcmp(cmd, "reveal")) {
+        executeReveal(atomicCmdStruct);
+    } else if (!strcmp(cmd, "log")) {
+        executeLog(atomicCmdStruct);
+    } else {
+        fprintf(stderr, "%s: command not found\n", cmd);
+    }
+}
+
