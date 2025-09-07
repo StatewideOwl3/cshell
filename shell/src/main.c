@@ -32,10 +32,11 @@ int main(){
     uname(sysinfo);
 
     while(1){
+        // Check for completed background jobs
+        check_bg_jobs();
+
         // Ready to accept commands:
         // Collect current working directory and username:
-        bg_fork = 0; // Global variable to indicate background process
-        pipe_exists = 0;
         char *currentPath = NULL;
         currentPath = getcwd(NULL, 0);
         if (currentPath== NULL){

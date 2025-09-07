@@ -15,6 +15,18 @@ extern char* absoluteHomePath; // Global variable to hold the absolute home path
 
 extern char* oldWD;
 
+#define MAX_HISTORY 15
+
+extern char* history[MAX_HISTORY];
+
+extern int log_execute;
+
+void load_history();
+
+void save_history();
+
+void add_to_history(char* cmd);
+
 void executeHop(struct atomic* atomicCmd);
 
 void executeReveal(struct atomic* atomicCmd);

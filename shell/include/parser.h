@@ -48,6 +48,11 @@ struct terminal{
     bool validity;
 };
 
+struct redir{
+    int target_fd;
+    int mode; // 0 for read, 1 for write, 2 for append
+    char* filename;
+};
 
 
 /*
