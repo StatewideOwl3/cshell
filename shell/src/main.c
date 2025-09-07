@@ -74,7 +74,7 @@ int main(){
         }
         
         // Add to log if not duplicate and not log command
-        if ((listTail == NULL || strcmp(input, listTail->shellCommandString) != 0) && strstr(input, "log") != input) {
+        if ((listTail == NULL || strcmp(input, listTail->shellCommandString) != 0) && strstr(input, "log") == NULL) {
             addLog(input);
         }
         
