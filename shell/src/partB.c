@@ -267,7 +267,7 @@ struct executedShellCommand* listTail = NULL;
 
 
 void loadLogs(){
-    FILE* file = fopen(logFile, "r");
+    FILE* file = fopen(absoluteHomePath, "r");
     if (file == NULL) {
         // If the file doesn't exist, it's not an error; just return
         return;
@@ -312,7 +312,7 @@ void loadLogs(){
 }
 
 void saveLog(){
-    FILE* file = fopen(logFile, "w");
+    FILE* file = fopen(absoluteHomePath, "w");
     if (file == NULL) {
         perror("Failed to open log file for writing");
         return;
