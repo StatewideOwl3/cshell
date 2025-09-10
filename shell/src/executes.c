@@ -27,6 +27,66 @@ int add_bg_job(pid_t pid, char* cmd_name) {
     return node->job_num;
 }
 
+// -------- Job helpers ---------
+static struct bg_job* find_bg_job_by_num(int job_num) {
+    struct bg_job* cur = bg_job_head;
+    while (cur) { if (cur->job_num == job_num) return cur; cur = cur->next; }
+    return NULL;
+}
+
+static struct bg_job* find_bg_job_by_pid(pid_t pid) {
+    struct bg_job* cur = bg_job_head;
+    while (cur) { if (cur->pid == pid) return cur; cur = cur->next; }
+    return NULL;
+}
+
+static int most_recent_job_num(void) {
+    int maxn = -1; struct bg_job* cur = bg_job_head;
+    while (cur) { if (cur->job_num > maxn) maxn = cur->job_num; cur = cur->next; }
+    return maxn;
+}
+
+static struct job* find_activity_job(pid_t pid) {
+    struct job* j = job_list; while (j) { if (j->pid == pid) return j; j = j->next; } return NULL;
+}
+
+static int pid_seen_contains(pid_t *seen, int seen_count, pid_t pid) {
+    for (int i = 0; i < seen_count; i++) if (seen[i] == pid) return 1;
+    return 0;
+}
+
+static void pid_seen_add(pid_t *seen, int *seen_count, pid_t pid, int max) {
+    if (pid <= 0) return;
+    if (pid_seen_contains(seen, *seen_count, pid)) return;
+    if (*seen_count < max) {
+        seen[*seen_count] = pid;
+        (*seen_count)++;
+    }
+}
+
+// Kill all known children/process groups (used on EOF)
+void kill_all_children(void) {
+    // Collect unique PIDs from bg_job_head and job_list
+    pid_t seen[512];
+    int seen_count = 0;
+
+    struct bg_job* bj = bg_job_head;
+    while (bj) { pid_seen_add(seen, &seen_count, bj->pid, (int)(sizeof(seen)/sizeof(seen[0]))); bj = bj->next; }
+
+    struct job* j = job_list;
+    while (j) { pid_seen_add(seen, &seen_count, j->pid, (int)(sizeof(seen)/sizeof(seen[0]))); j = j->next; }
+
+    for (int i = 0; i < seen_count; i++) {
+        pid_t pid = seen[i];
+        pid_t pg = getpgid(pid);
+        if (pg > 0) {
+            kill(-pg, SIGKILL);
+        } else {
+            kill(pid, SIGKILL);
+        }
+    }
+}
+
 void check_bg_jobs() {
     struct bg_job* prev = NULL;
     struct bg_job* cur = bg_job_head;
@@ -208,9 +268,30 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
         // Hand terminal to the pipeline's process group
         if (isatty(STDIN_FILENO) && pgid > 0) tcsetpgrp(STDIN_FILENO, pgid);
         int status;
+        int any_stopped = 0;
         for (int i = 0; i < num_atomics; i++) {
             if (pids[i] > 0) {
-                waitpid(pids[i], &status, WUNTRACED);
+                if (waitpid(pids[i], &status, WUNTRACED) > 0) {
+                    if (WIFSTOPPED(status)) any_stopped = 1;
+                }
+            }
+        }
+        // If pipeline stopped, announce and register as background-controllable job
+        if (any_stopped && pgid > 0) {
+            const char* name = cmdGroupStruct->cmdString ? cmdGroupStruct->cmdString : "job";
+            struct bg_job* existing = find_bg_job_by_pid(pgid);
+            int job_num;
+            if (existing) {
+                job_num = existing->job_num;
+            } else {
+                job_num = add_bg_job(pgid, (char*)name);
+            }
+            // Update activities: ensure present and marked stopped
+            struct job* aj = find_activity_job(pgid);
+            if (!aj) addJob(pgid, (char*)name, 0); else aj->running = 0;
+            if (job_num != -1) {
+                printf("[%d] Stopped %s\n", job_num, name);
+                fflush(stdout);
             }
         }
         // Reclaim terminal control
@@ -233,7 +314,7 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
     // --- Detect builtins ---
     int is_builtin = (!strcmp(cmd, "hop") || !strcmp(cmd, "reveal") 
     || !strcmp(cmd, "log") || !strcmp(cmd, "activities") || !strcmp(cmd, "ping")
-    || !strcmp(cmd, "exit"));
+    || !strcmp(cmd, "fg") || !strcmp(cmd, "bg") || !strcmp(cmd, "exit"));
 
     // --- Save original stdin/stdout for restoration ---
     int original_stdin  = dup(STDIN_FILENO);
@@ -279,56 +360,68 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
         else if (!strcmp(cmd, "activities")) printActivities();
         else if (!strcmp(cmd, "ping"))   executePing(atomicCmdStruct);
         else if (!strcmp(cmd, "fg")) {
-            if (firstTerm->cmdAndArgsIndex != 2) {
-                fprintf(stderr, "Invalid syntax!\n");
+            // fg [job_number]
+            int job_num = -1;
+            if (firstTerm->cmdAndArgsIndex == 1) {
+                job_num = most_recent_job_num();
+            } else if (firstTerm->cmdAndArgsIndex == 2) {
+                char *end = NULL; long jn = strtol(args[1], &end, 10);
+                if (end == args[1] || *end != '\0' || jn <= 0) { fprintf(stderr, "Invalid syntax!\n"); goto restore; }
+                job_num = (int)jn;
+            } else { fprintf(stderr, "Invalid syntax!\n"); goto restore; }
+
+            struct bg_job* bj = find_bg_job_by_num(job_num);
+            if (!bj) { printf("No such job\n"); goto restore; }
+            pid_t pid = bj->pid;
+            pid_t pg = getpgid(pid);
+            if (pg < 0) { printf("No such job\n"); goto restore; }
+
+            // Print the entire command when bringing to foreground
+            if (bj->cmd_name) { printf("%s\n", bj->cmd_name); fflush(stdout); }
+
+            // Give terminal to job's process group and continue it
+            if (isatty(STDIN_FILENO)) tcsetpgrp(STDIN_FILENO, pg);
+            kill(-pg, SIGCONT);
+            // Wait for job leader to finish or stop again
+            int status; if (waitpid(pid, &status, WUNTRACED) < 0 && errno != ECHILD) { /* ignore */ }
+            if (isatty(STDIN_FILENO)) tcsetpgrp(STDIN_FILENO, getpgrp());
+
+            // Update activities list based on status
+            struct job* aj = find_activity_job(pid);
+            if (WIFSTOPPED(status)) {
+                if (aj) aj->running = 0; else addJob(pid, bj->cmd_name ? bj->cmd_name : "job", 0);
+                // Do not duplicate bg job entry or change job number here
+                printf("[%d] Stopped %s\n", job_num, bj->cmd_name ? bj->cmd_name : "job");
+                fflush(stdout);
             } else {
-                char *end = NULL; long pidLong = strtol(args[1], &end, 10);
-                if (end == args[1] || *end != '\0' || pidLong <= 0) {
-                    fprintf(stderr, "Invalid syntax!\n");
-                } else {
-                    pid_t pid = (pid_t)pidLong;
-                    pid_t pg = getpgid(pid);
-                    if (pg < 0) { fprintf(stderr, "No such process found\n"); goto restore; }
-                    // Give terminal to job's process group
-                    if (isatty(STDIN_FILENO)) tcsetpgrp(STDIN_FILENO, pg);
-                    // Continue the job group
-                    kill(-pg, SIGCONT);
-                    // Wait for job leader to finish or stop
-                    int status;
-                    if (waitpid(pid, &status, WUNTRACED) < 0 && errno != ECHILD) {
-                        // ignore
-                    }
-                    // Take back terminal
-                    if (isatty(STDIN_FILENO)) tcsetpgrp(STDIN_FILENO, getpgrp());
-                    // Update activities list based on status
-                    if (WIFSTOPPED(status)) {
-                        addJob(pid, atomicCmdStruct->atomicString ? atomicCmdStruct->atomicString : "job", 0);
-                    } else {
-                        removeJob(pid);
-                    }
-                }
+                if (aj) removeJob(pid);
             }
         }
         else if (!strcmp(cmd, "bg")) {
-            if (firstTerm->cmdAndArgsIndex != 2) {
-                fprintf(stderr, "Invalid syntax!\n");
-            } else {
-                char *end = NULL; long pidLong = strtol(args[1], &end, 10);
-                if (end == args[1] || *end != '\0' || pidLong <= 0) {
-                    fprintf(stderr, "Invalid syntax!\n");
-                } else {
-                    pid_t pid = (pid_t)pidLong;
-                    pid_t pg = getpgid(pid);
-                    if (pg < 0) { fprintf(stderr, "No such process found\n"); goto restore; }
-                    // continue the background job group
-                    if (kill(-pg, SIGCONT) == -1) {
-                        fprintf(stderr, "No such process found\n");
-                    } else {
-                        // mark running in activities
-                        addJob(pid, atomicCmdStruct->atomicString ? atomicCmdStruct->atomicString : "job", 1);
-                    }
-                }
-            }
+            // bg [job_number]
+            int job_num = -1;
+            if (firstTerm->cmdAndArgsIndex == 1) {
+                job_num = most_recent_job_num();
+            } else if (firstTerm->cmdAndArgsIndex == 2) {
+                char *end = NULL; long jn = strtol(args[1], &end, 10);
+                if (end == args[1] || *end != '\0' || jn <= 0) { fprintf(stderr, "Invalid syntax!\n"); goto restore; }
+                job_num = (int)jn;
+            } else { fprintf(stderr, "Invalid syntax!\n"); goto restore; }
+
+            struct bg_job* bj = find_bg_job_by_num(job_num);
+            if (!bj) { printf("No such job\n"); goto restore; }
+            pid_t pid = bj->pid; pid_t pg = getpgid(pid);
+            if (pg < 0) { printf("No such job\n"); goto restore; }
+
+            // Only resume stopped jobs
+            struct job* aj = find_activity_job(pid);
+            if (aj && aj->running == 1) { printf("Job already running\n"); goto restore; }
+            // Resume
+            if (kill(-pg, SIGCONT) == -1) { printf("No such job\n"); goto restore; }
+            if (aj) aj->running = 1; else addJob(pid, bj->cmd_name ? bj->cmd_name : "job", 1);
+            // Print per spec
+            printf("[%d] %s &\n", job_num, bj->cmd_name ? bj->cmd_name : "job");
+            fflush(stdout);
         }
         else if (!strcmp(cmd, "exit"))   exit(0);
 
@@ -370,8 +463,14 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
             waitpid(pid, &status, WUNTRACED);
             if (isatty(STDIN_FILENO)) tcsetpgrp(STDIN_FILENO, getpgrp());
             if (WIFSTOPPED(status)) {
-                // Add stopped foreground job to activities for control
-                addJob(pid, atomicCmdStruct->atomicString ? atomicCmdStruct->atomicString : cmd, 0);
+                // Add stopped foreground job to activities and bg list; announce
+                const char* name = atomicCmdStruct->atomicString ? atomicCmdStruct->atomicString : cmd;
+                int job_num = add_bg_job(pid, (char*)name);
+                addJob(pid, (char*)name, 0);
+                if (job_num != -1) {
+                    printf("[%d] Stopped %s\n", job_num, name);
+                    fflush(stdout);
+                }
             }
         }
     }

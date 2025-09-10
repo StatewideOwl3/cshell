@@ -8,6 +8,7 @@
 #include <sys/utsname.h>
  #include <signal.h>
  #include <termios.h>
+ #include <errno.h>
 
 #include "../include/printPrompt.h"
 #include "../include/parser.h"
@@ -76,7 +77,27 @@ int main(){
 
         // Take user command:
         char input[MAX_INPUT_SIZE] = {0}; // Clearing it before reading into it
-        if (fgets(input, MAX_INPUT_SIZE, stdin) == NULL) continue;
+        if (fgets(input, MAX_INPUT_SIZE, stdin) == NULL) {
+            // Handle EOF (Ctrl-D) or interrupted read
+            if (feof(stdin)) {
+                if (isatty(STDIN_FILENO)) printf("\n");
+                // Send SIGKILL to all child processes/process groups
+                kill_all_children();
+                // Print logout and exit 0
+                printf("logout\n");
+                fflush(stdout);
+                exit(0);
+            }
+            if (ferror(stdin)) {
+                if (errno == EINTR) { // Interrupted by signal; clear and continue
+                    clearerr(stdin);
+                    continue;
+                }
+                perror("input error");
+                break;
+            }
+            continue;
+        }
         input[strcspn(input, "\n")] = 0; // Remove trailing newline
         if (strlen(input) == 0) continue; // Skip empty input
 

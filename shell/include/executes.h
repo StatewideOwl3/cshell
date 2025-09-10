@@ -45,4 +45,7 @@ void executeActivities(struct atomic* atomicCmdStruct);
 
 void executePing(struct atomic* atomicCmdStruct);
 
+// Kill all known child jobs/process groups (used on EOF/Ctrl-D)
+void kill_all_children(void);
+
 #endif // EXECUTES_H
