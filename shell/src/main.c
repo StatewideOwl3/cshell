@@ -6,6 +6,8 @@
 
 #include <unistd.h>
 #include <sys/utsname.h>
+ #include <signal.h>
+ #include <termios.h>
 
 #include "../include/printPrompt.h"
 #include "../include/parser.h"
@@ -18,6 +20,17 @@
 int main(){
     // Store the directory path in which the shell is started in 
     mainPid = getpid();
+    // Put the shell in its own process group and grab the controlling terminal
+    // Ignore failures quietly if not running interactively
+    setpgid(0, 0);
+    if (isatty(STDIN_FILENO)) {
+        tcsetpgrp(STDIN_FILENO, getpgrp());
+    }
+    // Ignore interactive/tty signals in the shell; foreground jobs will receive them instead
+    signal(SIGINT, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
+    signal(SIGTTIN, SIG_IGN);
+    signal(SIGTTOU, SIG_IGN);
     absoluteHomePath = getcwd(NULL, 0);
     if (absoluteHomePath == NULL){
         perror("getcwd() error");

@@ -1,10 +1,16 @@
 #include "../include/executes.h"
 #include <string.h>
+ #include <signal.h>
+ #include <termios.h>
+ #include <errno.h>
 
 pid_t mainPid;
 
 int bg_fork; // Global variable to indicate background process
 int pipe_exists;
+
+// Track the current job's process group when creating pipelines
+pid_t current_job_pgid = -1;
 
 struct bg_job* bg_job_head = NULL;
 int next_job_num = 1;
@@ -82,6 +88,14 @@ void executeShellCommand(struct shell_cmd* shellCommandStruct){
                 } else if (jobLeaderPid == 0) {
                     // In child: set background flag and redirect stdin to /dev/null
                     bg_fork = 1;
+                    // Create a new process group for the background job; child becomes group leader
+                    setpgid(0, 0);
+                    current_job_pgid = getpid();
+                    // Reset default signal handling for the job
+                    signal(SIGINT, SIG_DFL);
+                    signal(SIGTSTP, SIG_DFL);
+                    signal(SIGTTIN, SIG_DFL);
+                    signal(SIGTTOU, SIG_DFL);
                     int devnull = open("/dev/null", O_RDONLY);
                     if (devnull >= 0) {
                         dup2(devnull, STDIN_FILENO);
@@ -133,6 +147,7 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
     // the user only expects background (&) jobs there. Foreground pipeline
     // children are waited on immediately below.
     pid_t pids[num_atomics];
+    pid_t pgid = -1;
     for (int i = 0; i < num_atomics; i++) {
         struct atomic* atomicCmd = cmdGroupStruct->atomicArr[i];
         if (!atomicCmd || !atomicCmd->validity) continue;
@@ -140,6 +155,19 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
         pids[i] = fork();
         if (pids[i] == 0) {
             // Child: Set up pipe connections
+            // Put this child in the job's process group
+            if (bg_fork) {
+                // background: inherit group from job leader saved in current_job_pgid
+                if (current_job_pgid > 0) setpgid(0, current_job_pgid);
+            } else {
+                // foreground pipeline: first child becomes group leader, others join
+                if (i == 0) setpgid(0, 0); else setpgid(0, pgid > 0 ? pgid : getpid());
+            }
+            // Reset default signal handling in children
+            signal(SIGINT, SIG_DFL);
+            signal(SIGTSTP, SIG_DFL);
+            signal(SIGTTIN, SIG_DFL);
+            signal(SIGTTOU, SIG_DFL);
             if (i > 0) {  // Not the first atomic: read from previous pipe
                 // STDIN of this new child process is now set to pipe
                 dup2(pipes[i-1][0], STDIN_FILENO);
@@ -156,14 +184,16 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
             // Execute the atomic
             executeAtomicCmd(atomicCmd);
             exit(0);  // Exit child after execution
-        } else if (pids[i] < 0) {
-            perror("Fork failed");
-            // Clean up already created pipes before returning
-            for (int j = 0; j < num_atomics - 1; j++) {
-                close(pipes[j][0]);
-                close(pipes[j][1]);
+        } else {
+            // Parent: set up process group id for the pipeline
+            if (!bg_fork) {
+                if (i == 0) {
+                    pgid = pids[0];
+                    setpgid(pids[0], pgid);
+                } else {
+                    setpgid(pids[i], pgid);
+                }
             }
-            return;
         }
     }
 
@@ -173,11 +203,20 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
         close(pipes[j][1]);
     }
 
-    // Wait for all children
-    for (int i = 0; i < num_atomics; i++) {
-        if (pids[i] > 0) {
-            waitpid(pids[i], NULL, 0);
+    // Foreground pipeline: give terminal to job and wait; Background already handled by caller
+    if (!bg_fork) {
+        // Hand terminal to the pipeline's process group
+        if (isatty(STDIN_FILENO) && pgid > 0) tcsetpgrp(STDIN_FILENO, pgid);
+        int status;
+        for (int i = 0; i < num_atomics; i++) {
+            if (pids[i] > 0) {
+                waitpid(pids[i], &status, WUNTRACED);
+            }
         }
+        // Reclaim terminal control
+        if (isatty(STDIN_FILENO)) tcsetpgrp(STDIN_FILENO, getpgrp());
+    } else {
+        // Background pipeline: nothing to wait here; job leader handles listing
     }
     // Clear pipe_exists flag after pipeline completes
     pipe_exists = 0;
@@ -239,6 +278,58 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
         else if (!strcmp(cmd, "log"))    executeLog(atomicCmdStruct);
         else if (!strcmp(cmd, "activities")) printActivities();
         else if (!strcmp(cmd, "ping"))   executePing(atomicCmdStruct);
+        else if (!strcmp(cmd, "fg")) {
+            if (firstTerm->cmdAndArgsIndex != 2) {
+                fprintf(stderr, "Invalid syntax!\n");
+            } else {
+                char *end = NULL; long pidLong = strtol(args[1], &end, 10);
+                if (end == args[1] || *end != '\0' || pidLong <= 0) {
+                    fprintf(stderr, "Invalid syntax!\n");
+                } else {
+                    pid_t pid = (pid_t)pidLong;
+                    pid_t pg = getpgid(pid);
+                    if (pg < 0) { fprintf(stderr, "No such process found\n"); goto restore; }
+                    // Give terminal to job's process group
+                    if (isatty(STDIN_FILENO)) tcsetpgrp(STDIN_FILENO, pg);
+                    // Continue the job group
+                    kill(-pg, SIGCONT);
+                    // Wait for job leader to finish or stop
+                    int status;
+                    if (waitpid(pid, &status, WUNTRACED) < 0 && errno != ECHILD) {
+                        // ignore
+                    }
+                    // Take back terminal
+                    if (isatty(STDIN_FILENO)) tcsetpgrp(STDIN_FILENO, getpgrp());
+                    // Update activities list based on status
+                    if (WIFSTOPPED(status)) {
+                        addJob(pid, atomicCmdStruct->atomicString ? atomicCmdStruct->atomicString : "job", 0);
+                    } else {
+                        removeJob(pid);
+                    }
+                }
+            }
+        }
+        else if (!strcmp(cmd, "bg")) {
+            if (firstTerm->cmdAndArgsIndex != 2) {
+                fprintf(stderr, "Invalid syntax!\n");
+            } else {
+                char *end = NULL; long pidLong = strtol(args[1], &end, 10);
+                if (end == args[1] || *end != '\0' || pidLong <= 0) {
+                    fprintf(stderr, "Invalid syntax!\n");
+                } else {
+                    pid_t pid = (pid_t)pidLong;
+                    pid_t pg = getpgid(pid);
+                    if (pg < 0) { fprintf(stderr, "No such process found\n"); goto restore; }
+                    // continue the background job group
+                    if (kill(-pg, SIGCONT) == -1) {
+                        fprintf(stderr, "No such process found\n");
+                    } else {
+                        // mark running in activities
+                        addJob(pid, atomicCmdStruct->atomicString ? atomicCmdStruct->atomicString : "job", 1);
+                    }
+                }
+            }
+        }
         else if (!strcmp(cmd, "exit"))   exit(0);
 
     }
@@ -246,6 +337,11 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
         // We're already inside a forked child set up by the pipeline loop
         // -> just exec directly, no new fork
         //execvp("/bin/bash", (char*[]){"/bin/bash", "-c", atomicCmdStruct->atomicString, NULL});
+        // Ensure default signal handling in exec'd process
+        signal(SIGINT, SIG_DFL);
+        signal(SIGTSTP, SIG_DFL);
+        signal(SIGTTIN, SIG_DFL);
+        signal(SIGTTOU, SIG_DFL);
         execvp(cmd, args);
         fprintf(stderr, "Command not found!\n");
     }
@@ -257,12 +353,26 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
             goto restore;
         } else if (pid == 0) {
             //execvp("/bin/bash", (char*[]){"/bin/bash", "-c", atomicCmdStruct->atomicString, NULL});
+            // Child: new process group for job-control
+            setpgid(0, 0);
+            // Foreground job should take default signal actions
+            signal(SIGINT, SIG_DFL);
+            signal(SIGTSTP, SIG_DFL);
+            signal(SIGTTIN, SIG_DFL);
+            signal(SIGTTOU, SIG_DFL);
             execvp(cmd, args);
             fprintf(stderr, "Command not found!\n");
             exit(1);
         } else {
-            // Foreground standalone command: wait; do not add to activities list.
-            waitpid(pid, NULL, 0);
+            // Parent: give terminal to child's process group and wait; on stop, keep in activities
+            if (isatty(STDIN_FILENO)) tcsetpgrp(STDIN_FILENO, pid);
+            int status = 0;
+            waitpid(pid, &status, WUNTRACED);
+            if (isatty(STDIN_FILENO)) tcsetpgrp(STDIN_FILENO, getpgrp());
+            if (WIFSTOPPED(status)) {
+                // Add stopped foreground job to activities for control
+                addJob(pid, atomicCmdStruct->atomicString ? atomicCmdStruct->atomicString : cmd, 0);
+            }
         }
     }
 
