@@ -5,7 +5,7 @@ char* absoluteHomePath = NULL; // Global variable to hold the absolute home path
 char* oldWD = NULL;
 
 static int cmp(const void* a, const void* b) {
-    return strcasecmp(*(char**)a, *(char**)b);
+    return strcmp(*(char**)a, *(char**)b);
 }
 
 
@@ -251,7 +251,6 @@ void executeLog(struct atomic* atomicCmd){
     if (argCount == 1) {
         // No arguments: print the log
         struct executedShellCommand* current = listHead;
-        int count = 1;
         while (current != NULL) {
             printf("%s\n", current->shellCommandString);
             current = current->next;

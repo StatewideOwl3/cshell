@@ -6,34 +6,46 @@ pid_t mainPid;
 int bg_fork; // Global variable to indicate background process
 int pipe_exists;
 
-struct bg_job bg_jobs[MAX_BG_JOBS];
-int bg_job_count = 0;
+struct bg_job* bg_job_head = NULL;
 int next_job_num = 1;
 
-void add_bg_job(pid_t pid, char* cmd_name) {
-    if (bg_job_count >= MAX_BG_JOBS) return;
-    bg_jobs[bg_job_count].job_num = next_job_num++;
-    bg_jobs[bg_job_count].pid = pid;
-    bg_jobs[bg_job_count].cmd_name = strdup(cmd_name);
-    bg_jobs[bg_job_count].status = 0; // running
-    bg_job_count++;
+int add_bg_job(pid_t pid, char* cmd_name) {
+    struct bg_job* node = malloc(sizeof(struct bg_job));
+    if (!node) return -1;
+    node->job_num = next_job_num++;
+    node->pid = pid;
+    node->cmd_name = strdup(cmd_name ? cmd_name : "(null)");
+    node->status = 0;
+    node->next = bg_job_head;
+    bg_job_head = node;
+    return node->job_num;
 }
 
 void check_bg_jobs() {
-    for (int i = 0; i < bg_job_count; i++) {
-        if (bg_jobs[i].status == 0) {
-            int status;
-            pid_t result = waitpid(bg_jobs[i].pid, &status, WNOHANG);
+    struct bg_job* prev = NULL;
+    struct bg_job* cur = bg_job_head;
+    while (cur) {
+        if (cur->status == 0) { // only poll running jobs
+            int status = 0;
+            pid_t result = waitpid(cur->pid, &status, WNOHANG);
             if (result > 0) {
                 if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-                    bg_jobs[i].status = 1; // exited normally
+                    cur->status = 1; // exited normally
                 } else {
-                    bg_jobs[i].status = 2; // exited abnormally
+                    cur->status = 2; // exited abnormally
                 }
-                print_bg_job_status(bg_jobs[i].job_num, bg_jobs[i].pid, bg_jobs[i].cmd_name, bg_jobs[i].status);
-                bg_jobs[i].status = -1; // mark as processed
+                print_bg_job_status(cur->job_num, cur->pid, cur->cmd_name, cur->status);
+                // Remove node immediately after reporting
+                struct bg_job* to_free = cur;
+                if (prev) prev->next = cur->next; else bg_job_head = cur->next;
+                cur = cur->next;
+                free(to_free->cmd_name);
+                free(to_free);
+                continue; // skip prev advance
             }
         }
+        prev = cur;
+        cur = cur->next;
     }
 }
 
@@ -43,6 +55,15 @@ void print_bg_job_status(int job_num, pid_t pid, char* cmd_name, int status) {
     } else if (status == 2) {
         printf("%s with pid %d exited abnormally\n", cmd_name, pid);
     }
+}
+
+int is_bg_job_running(pid_t pid) {
+    struct bg_job* cur = bg_job_head;
+    while (cur) {
+        if (cur->pid == pid && cur->status == 0) return 1;
+        cur = cur->next;
+    }
+    return 0;
 }
 
 void executeShellCommand(struct shell_cmd* shellCommandStruct){
@@ -72,8 +93,10 @@ void executeShellCommand(struct shell_cmd* shellCommandStruct){
                 } else {
                     // Parent: add to background jobs and print info
                     char* cmd_name = cmdGroup->cmdString ? cmdGroup->cmdString : "background job";
-                    add_bg_job(jobLeaderPid, cmd_name);
-                    printf("[%d] %d\n", bg_jobs[bg_job_count-1].job_num, jobLeaderPid);
+                    int job_num = add_bg_job(jobLeaderPid, cmd_name);
+                    // Also add to shell job list (parent) so activities can see it
+                    addJob(jobLeaderPid, cmd_name, 1);
+                    if (job_num != -1) printf("[%d] %d\n", job_num, jobLeaderPid);
                     fflush(stdout);
                 }
             } else {
@@ -105,7 +128,10 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
         }
     }
 
-    // Fork and set up each atomic in the pipeline
+    // Fork and set up each atomic in the pipeline (foreground only). We should NOT
+    // register these children as background jobs for the activities list because
+    // the user only expects background (&) jobs there. Foreground pipeline
+    // children are waited on immediately below.
     pid_t pids[num_atomics];
     for (int i = 0; i < num_atomics; i++) {
         struct atomic* atomicCmd = cmdGroupStruct->atomicArr[i];
@@ -132,6 +158,12 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
             exit(0);  // Exit child after execution
         } else if (pids[i] < 0) {
             perror("Fork failed");
+            // Clean up already created pipes before returning
+            for (int j = 0; j < num_atomics - 1; j++) {
+                close(pipes[j][0]);
+                close(pipes[j][1]);
+            }
+            return;
         }
     }
 
@@ -147,6 +179,8 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
             waitpid(pids[i], NULL, 0);
         }
     }
+    // Clear pipe_exists flag after pipeline completes
+    pipe_exists = 0;
 }
 
 void executeAtomicCmd(struct atomic* atomicCmdStruct) {
@@ -158,7 +192,9 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
     char* cmd = args[0];
 
     // --- Detect builtins ---
-    int is_builtin = (!strcmp(cmd, "hop") || !strcmp(cmd, "reveal") || !strcmp(cmd, "log"));
+    int is_builtin = (!strcmp(cmd, "hop") || !strcmp(cmd, "reveal") 
+    || !strcmp(cmd, "log") || !strcmp(cmd, "activities") || !strcmp(cmd, "ping")
+    || !strcmp(cmd, "exit"));
 
     // --- Save original stdin/stdout for restoration ---
     int original_stdin  = dup(STDIN_FILENO);
@@ -201,13 +237,17 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
         if (!strcmp(cmd, "hop"))        executeHop(atomicCmdStruct);
         else if (!strcmp(cmd, "reveal")) executeReveal(atomicCmdStruct);
         else if (!strcmp(cmd, "log"))    executeLog(atomicCmdStruct);
+        else if (!strcmp(cmd, "activities")) printActivities();
+        else if (!strcmp(cmd, "ping"))   executePing(atomicCmdStruct);
+        else if (!strcmp(cmd, "exit"))   exit(0);
+
     }
     else if (pipe_exists || bg_fork) {
         // We're already inside a forked child set up by the pipeline loop
         // -> just exec directly, no new fork
         //execvp("/bin/bash", (char*[]){"/bin/bash", "-c", atomicCmdStruct->atomicString, NULL});
         execvp(cmd, args);
-        fprintf(stderr, "%s: command not found\n", cmd);
+        fprintf(stderr, "Command not found!\n");
     }
     else {
         // Standalone external command: fork + exec
@@ -218,9 +258,10 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
         } else if (pid == 0) {
             //execvp("/bin/bash", (char*[]){"/bin/bash", "-c", atomicCmdStruct->atomicString, NULL});
             execvp(cmd, args);
-            fprintf(stderr, "%s: command not found\n",cmd);
+            fprintf(stderr, "Command not found!\n");
             exit(1);
         } else {
+            // Foreground standalone command: wait; do not add to activities list.
             waitpid(pid, NULL, 0);
         }
     }
@@ -242,14 +283,61 @@ void executeActivities(struct atomic* atomicCmdStruct) {
     char** args = firstTerm->cmdAndArgs;
     char* cmd = args[0];
 
-    if (!strcmp(cmd, "hop")) {
-        executeHop(atomicCmdStruct);
-    } else if (!strcmp(cmd, "reveal")) {
-        executeReveal(atomicCmdStruct);
-    } else if (!strcmp(cmd, "log")) {
-        executeLog(atomicCmdStruct);
+    if (strcmp(cmd, "activities") == 0) {
+        printActivities();
     } else {
-        fprintf(stderr, "%s: command not found\n", cmd);
+        fprintf(stderr, "Command not found!\n");
     }
 }
 
+
+void executePing(struct atomic* atomicCmdStruct){
+    if (!atomicCmdStruct || atomicCmdStruct->validity == 0 || atomicCmdStruct->termArrIndex == 0) return;
+
+    struct terminal* firstTerm = atomicCmdStruct->terminalArr[0];
+    if (!firstTerm || firstTerm->cmdAndArgsIndex == 0) return;
+    char** args = firstTerm->cmdAndArgs;
+    (void)args[0]; // command name "ping" unused beyond presence
+
+    // Expect exactly: ping <pid> <signal_number>
+    if (firstTerm->cmdAndArgsIndex != 3) {
+        fprintf(stderr, "Invalid syntax!\n");
+        return;
+    }
+
+    char *end = NULL;
+    long pidLong = strtol(args[1], &end, 10);
+    if (end == args[1] || *end != '\0') { // non-numeric pid token
+        fprintf(stderr, "Invalid syntax!\n");
+        return;
+    }
+    if (pidLong <= 0) { // invalid / non-existing pid semantics
+        fprintf(stderr, "No such process found\n");
+        return;
+    }
+
+    end = NULL;
+    long sigLong = strtol(args[2], &end, 10);
+    if (end == args[2] || *end != '\0') { // non-numeric signal token
+        fprintf(stderr, "Invalid syntax!\n");
+        return;
+    }
+
+    if (sigLong < 0) { // treat negative signal as invalid syntax
+        fprintf(stderr, "Invalid syntax!\n");
+        return;
+    }
+
+    int actualSignal = (int)((sigLong % 32 + 32) % 32); // positive normalized modulo 32
+
+    if (kill((pid_t)pidLong, actualSignal) == -1) {
+        // Any failure per spec -> No such process found
+        fprintf(stderr, "No such process found\n");
+        return;
+    }
+
+    printf("Sent signal %d to process with pid %ld\n", actualSignal, pidLong);
+    // Force an immediate reap/cleanup pass so activities reflects removal ASAP
+    check_bg_jobs();
+    updateJobs();
+}

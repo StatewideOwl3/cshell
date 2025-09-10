@@ -48,4 +48,3 @@ void saveLog();
 void addLog(char* commandString);
 
 #endif // PARTB_H
-

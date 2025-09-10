@@ -1,3 +1,6 @@
+#ifndef PRINTPROMPT_H
+#define PRINTPROMPT_H
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -11,3 +14,4 @@ bool isSubstring(char* absPath, char* currPath);
 
 char* getPathToPrint(char* absPath, char* currPath);
 
+#endif

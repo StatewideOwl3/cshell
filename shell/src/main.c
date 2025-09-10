@@ -11,6 +11,9 @@
 #include "../include/parser.h"
 #include "../include/partB.h"
 #include "../include/executes.h"
+#include "../include/partE.h"
+
+
 
 int main(){
     // Store the directory path in which the shell is started in 
