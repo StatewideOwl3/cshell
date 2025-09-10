@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/types.h>
+ #include <sys/stat.h>
 
 #include "printPrompt.h"
 #include "parser.h"

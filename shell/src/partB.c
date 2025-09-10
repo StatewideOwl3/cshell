@@ -133,6 +133,7 @@ void executeReveal(struct atomic* atomicGroup){
     int lineFlag = 0;
 
     char* dirPath = NULL;
+    int dirPath_allocated = 0; // 1 if dirPath should be freed
 
     for (int i = 1; i < argCount; i++) {
         if (args[i][0]=='-' && strstr(args[i], "a") != NULL) {
@@ -152,9 +153,11 @@ void executeReveal(struct atomic* atomicGroup){
                 return;
             }
             dirPath = oldWD;
+            dirPath_allocated = 0;
         }
         else if (strcmp(args[i], "~") == 0) {
             dirPath = absoluteHomePath;
+            dirPath_allocated = 0;
         }
         else if (strcmp(args[i], ".") == 0) {
             dirPath = getcwd(NULL, 0);
@@ -162,6 +165,7 @@ void executeReveal(struct atomic* atomicGroup){
                 //perror("getcwd() error");
                 return;
             }
+            dirPath_allocated = 1;
         }
         else if (strcmp(args[i], "..") == 0) {
             dirPath = realpath("..", NULL);
@@ -169,9 +173,11 @@ void executeReveal(struct atomic* atomicGroup){
                 //perror("realpath() error");
                 return;
             }
+            dirPath_allocated = 1;
         }
         else if (args[i][0] != '-') {
             dirPath = args[i];
+            dirPath_allocated = 0;
         }
     }
 
@@ -181,15 +187,24 @@ void executeReveal(struct atomic* atomicGroup){
             //perror("getcwd() failed for CWD");
             return;
         }
+        dirPath_allocated = 1;
         //printf("DEBUG: dirPath set to CWD: %s\n", dirPath);  // Add this for debugging
+    }
+
+    // If dirPath refers to a regular file (or non-directory), print its name like ls
+    struct stat st;
+    if (stat(dirPath, &st) == 0 && !S_ISDIR(st.st_mode)) {
+        if (lineFlag) printf("%s\n", dirPath);
+        else { printf("%s\n", dirPath); } // keep simple one-per-line for file target
+        if (dirPath_allocated) free(dirPath);
+        return;
     }
 
     DIR* dir = opendir(dirPath);
     struct dirent* entry;
     if (dir == NULL) {
-        //perror("opendir() failed");
-        //printf("DEBUG: dirPath was: %s\n", dirPath);  // Add this
-        free(dirPath);
+        // If cannot open directory and it's not a regular file, just silently return
+        if (dirPath_allocated) free(dirPath);
         return;
     }
 
@@ -201,7 +216,7 @@ void executeReveal(struct atomic* atomicGroup){
     if (!names) {
         perror("malloc failed");
         closedir(dir);
-        free(dirPath);
+        if (dirPath_allocated) free(dirPath);
         return;
     }
 
@@ -216,7 +231,7 @@ void executeReveal(struct atomic* atomicGroup){
             if (!names) {
                 perror("realloc failed");
                 closedir(dir);
-                free(dirPath);
+                if (dirPath_allocated) free(dirPath);
                 return;
             }
         }
@@ -240,7 +255,7 @@ void executeReveal(struct atomic* atomicGroup){
         printf("\n");
     }
     free(names);
-    free(dirPath);
+    if (dirPath_allocated) free(dirPath);
 }
 
 void executeLog(struct atomic* atomicCmd){
