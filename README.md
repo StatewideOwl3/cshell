@@ -1,1 +1,9 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/fkrRRp25)
+# LLM Chats
+1. https://g.co/gemini/share/df883efc6828
+2. https://g.co/gemini/share/1a8cb5af68a0
+3. https://g.co/gemini/share/48f3123b7a2d
+4. https://chatgpt.com/share/68c46979-0488-8008-aec8-978a315fc47a
+5. https://chatgpt.com/share/68c4698f-e570-8008-8854-22d46ef1c386
+6. https://g.co/gemini/share/6e79534ecb3e
+7. https://g.co/gemini/share/07e1796af9d2
+8. https://g.co/gemini/share/ad65895fd5c9

@@ -1,0 +1,521 @@
+diff -Naur '--exclude=.git' xv6-riscv/kernel/defs.h xv6-modified/kernel/defs.h
+--- xv6-riscv/kernel/defs.h	2025-09-13 15:31:26.261297188 +0530
++++ xv6-modified/kernel/defs.h	2025-09-13 15:07:55.054171627 +0530
+@@ -9,6 +9,8 @@
+ struct stat;
+ struct superblock;
+ 
++extern const int nice_to_weight[40];
++
+ // bio.c
+ void            binit(void);
+ struct buf*     bread(uint, uint);
+diff -Naur '--exclude=.git' xv6-riscv/kernel/file.c xv6-modified/kernel/file.c
+--- xv6-riscv/kernel/file.c	2025-09-13 15:31:26.261297188 +0530
++++ xv6-modified/kernel/file.c	2025-09-13 12:42:18.654163980 +0530
+@@ -13,6 +13,9 @@
+ #include "stat.h"
+ #include "proc.h"
+ 
++uint64 read_count;
++struct spinlock readcount_lock;
++
+ struct devsw devsw[NDEV];
+ struct {
+   struct spinlock lock;
+@@ -23,6 +26,7 @@
+ fileinit(void)
+ {
+   initlock(&ftable.lock, "ftable");
++  initlock(&readcount_lock, "readcount");
+ }
+ 
+ // Allocate a file structure.
+@@ -126,6 +130,11 @@
+     panic("fileread");
+   }
+ 
++  if (r > 0){
++    acquire(&readcount_lock);
++    read_count += (uint64)r;
++    release(&readcount_lock);
++  }
+   return r;
+ }
+ 
+diff -Naur '--exclude=.git' xv6-riscv/kernel/file.h xv6-modified/kernel/file.h
+--- xv6-riscv/kernel/file.h	2025-09-13 15:31:26.261297188 +0530
++++ xv6-modified/kernel/file.h	2025-09-13 12:21:38.844496914 +0530
+@@ -37,4 +37,7 @@
+ 
+ extern struct devsw devsw[];
+ 
++extern uint64 read_count;
++extern struct spinlock readcount_lock;
++
+ #define CONSOLE 1
+diff -Naur '--exclude=.git' xv6-riscv/kernel/proc.c xv6-modified/kernel/proc.c
+--- xv6-riscv/kernel/proc.c	2025-09-13 15:31:26.261844275 +0530
++++ xv6-modified/kernel/proc.c	2025-09-13 15:25:54.981093192 +0530
+@@ -20,6 +20,23 @@
+ 
+ extern char trampoline[]; // trampoline.S
+ 
++#if defined(CFS)
++#define TARGET_LATENCY 48
++#define MIN_SLICE 3
++// nice values from -20 to 19 map to weights.
++// This is NOT static so trap.c can access it.
++const int nice_to_weight[40] = {
++    88761, 71755, 56483, 46273, 36291, // -20 to -16
++    29154, 23254, 18705, 14949, 11916, // -15 to -11
++    9548,  7620,  6100,  4904,  3906,  // -10 to -6
++    3121,  2501,  1991,  1586,  1277,  // -5 to -1
++    1024,  820,   655,   526,   423,   // 0 to 4
++    335,   272,   215,   172,   137,   // 5 to 9
++    110,   87,    70,    56,    45,    // 10 to 14
++    36,    29,    23,    18,    15,    // 15 to 19
++};
++#endif
++
+ // helps ensure that wakeups of wait()ing
+ // parents are not lost. helps obey the
+ // memory model when using p->parent.
+@@ -125,6 +142,14 @@
+   p->pid = allocpid();
+   p->state = USED;
+ 
++  // Initialize new scheduler fields
++  p->creation_time = ticks; // For FCFS
++  #if defined(CFS)
++  p->nice = 0;
++  p->vruntime = 0;
++  p->time_slice = 0;
++  #endif
++
+   // Allocate a trapframe page.
+   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
+     freeproc(p);
+@@ -423,39 +448,96 @@
+ {
+   struct proc *p;
+   struct cpu *c = mycpu();
+-
++  
+   c->proc = 0;
+   for(;;){
+-    // The most recent process to run may have had interrupts
+-    // turned off; enable them to avoid a deadlock if all
+-    // processes are waiting. Then turn them back off
+-    // to avoid a possible race between an interrupt
+-    // and wfi.
++    // Avoid deadlock by ensuring that devices can interrupt.
+     intr_on();
+-    intr_off();
+ 
+-    int found = 0;
++#if defined(FCFS)
++    // FCFS SCHEDULER: Find the runnable process with the earliest creation time.
++    struct proc *earliest_proc = 0;
++
++    for(p = proc; p < &proc[NPROC]; p++) {
++      acquire(&p->lock);
++      if(p->state == RUNNABLE) {
++        if (earliest_proc == 0 || p->creation_time < earliest_proc->creation_time) {
++          if(earliest_proc)
++            release(&earliest_proc->lock);
++          earliest_proc = p;
++          continue; 
++        }
++      }
++      release(&p->lock);
++    }
++
++    if(earliest_proc) {
++        earliest_proc->state = RUNNING;
++        c->proc = earliest_proc;
++        swtch(&c->context, &earliest_proc->context);
++        c->proc = 0;
++        release(&earliest_proc->lock);
++    }
++
++#elif defined(CFS)
++    // COMPLETELY FAIR SCHEDULER (CFS): Find the runnable process with the minimum vruntime.
++    struct proc *cfs_proc = 0;
++    uint64 min_vruntime = -1; // Represents infinity for uint64
++    int num_runnable = 0;
++
++    // Count runnable processes to calculate time slice
++    for(p = proc; p < &proc[NPROC]; p++) {
++      if(p->state == RUNNABLE) {
++        num_runnable++;
++      }
++    }
++
++    if(num_runnable > 0) {
++      int slice = TARGET_LATENCY / num_runnable;
++      if (slice < MIN_SLICE) {
++        slice = MIN_SLICE;
++      }
++
++      // Find the process with the minimum vruntime
++      for(p = proc; p < &proc[NPROC]; p++) {
++        acquire(&p->lock);
++        if(p->state == RUNNABLE) {
++          if(cfs_proc == 0 || p->vruntime < min_vruntime) {
++            min_vruntime = p->vruntime;
++            if(cfs_proc) 
++              release(&cfs_proc->lock); // Release previous min
++            cfs_proc = p;
++            continue;
++          }
++        }
++        release(&p->lock);
++      }
++      
++      if(cfs_proc) {
++        cfs_proc->time_slice = slice;
++        cfs_proc->state = RUNNING;
++        c->proc = cfs_proc;
++
++        swtch(&c->context, &cfs_proc->context);
++
++        c->proc = 0;
++        release(&cfs_proc->lock);
++      }
++    }
++
++#else
++    // DEFAULT ROUND ROBIN SCHEDULER
+     for(p = proc; p < &proc[NPROC]; p++) {
+       acquire(&p->lock);
+       if(p->state == RUNNABLE) {
+-        // Switch to chosen process.  It is the process's job
+-        // to release its lock and then reacquire it
+-        // before jumping back to us.
+         p->state = RUNNING;
+         c->proc = p;
+         swtch(&c->context, &p->context);
+-
+-        // Process is done running for now.
+-        // It should have changed its p->state before coming back.
+         c->proc = 0;
+-        found = 1;
+       }
+       release(&p->lock);
+     }
+-    if(found == 0) {
+-      // nothing to run; stop running on this core until an interrupt.
+-      asm volatile("wfi");
+-    }
++#endif
+   }
+ }
+ 
+@@ -682,6 +764,12 @@
+     else
+       state = "???";
+     printf("%d %s %s", p->pid, state, p->name);
++    #if defined(FCFS)
++    printf(" creation_time: %ld", p->creation_time);
++    #elif defined(CFS)
++    // Divide by a scaling factor to make vruntime readable
++    printf(" nice: %d vruntime: %ld", p->nice, p->vruntime / 1024);
++    #endif
+     printf("\n");
+   }
+ }
+diff -Naur '--exclude=.git' xv6-riscv/kernel/proc.h xv6-modified/kernel/proc.h
+--- xv6-riscv/kernel/proc.h	2025-09-13 15:31:26.261844275 +0530
++++ xv6-modified/kernel/proc.h	2025-09-13 14:50:54.175738995 +0530
+@@ -104,4 +104,9 @@
+   struct file *ofile[NOFILE];  // Open files
+   struct inode *cwd;           // Current directory
+   char name[16];               // Process name (debugging)
++
++  uint creation_time;          // Timestamp of process creation (for FCFS)
++  int nice;                    // Nice value for priority (for CFS)
++  uint64 vruntime;             // Virtual runtime (for CFS)
++  int time_slice;
+ };
+diff -Naur '--exclude=.git' xv6-riscv/kernel/syscall.c xv6-modified/kernel/syscall.c
+--- xv6-riscv/kernel/syscall.c	2025-09-13 15:31:26.261844275 +0530
++++ xv6-modified/kernel/syscall.c	2025-09-13 15:16:48.802773259 +0530
+@@ -101,6 +101,8 @@
+ extern uint64 sys_link(void);
+ extern uint64 sys_mkdir(void);
+ extern uint64 sys_close(void);
++extern uint64 sys_getreadcount(void);
++extern uint64 sys_set_nice(void);
+ 
+ // An array mapping syscall numbers from syscall.h
+ // to the function that handles the system call.
+@@ -126,6 +128,8 @@
+ [SYS_link]    sys_link,
+ [SYS_mkdir]   sys_mkdir,
+ [SYS_close]   sys_close,
++[SYS_getreadcount] sys_getreadcount,
++[SYS_set_nice]  sys_set_nice,
+ };
+ 
+ void
+diff -Naur '--exclude=.git' xv6-riscv/kernel/syscall.h xv6-modified/kernel/syscall.h
+--- xv6-riscv/kernel/syscall.h	2025-09-13 15:31:26.261844275 +0530
++++ xv6-modified/kernel/syscall.h	2025-09-13 15:16:00.521116590 +0530
+@@ -20,3 +20,5 @@
+ #define SYS_link   19
+ #define SYS_mkdir  20
+ #define SYS_close  21
++#define SYS_getreadcount 22
++#define SYS_set_nice 23
+diff -Naur '--exclude=.git' xv6-riscv/kernel/sysfile.c xv6-modified/kernel/sysfile.c
+--- xv6-riscv/kernel/sysfile.c	2025-09-13 15:31:26.262844306 +0530
++++ xv6-modified/kernel/sysfile.c	2025-09-13 12:25:15.534245322 +0530
+@@ -51,6 +51,16 @@
+   return -1;
+ }
+ 
++
++uint64
++sys_getreadcount(void){
++  uint64 v;
++  acquire(&readcount_lock);
++  v = read_count;
++  release(&readcount_lock);
++  return v;
++}
++
+ uint64
+ sys_dup(void)
+ {
+diff -Naur '--exclude=.git' xv6-riscv/kernel/sysproc.c xv6-modified/kernel/sysproc.c
+--- xv6-riscv/kernel/sysproc.c	2025-09-13 15:31:26.262844306 +0530
++++ xv6-modified/kernel/sysproc.c	2025-09-13 15:18:42.794072168 +0530
+@@ -105,3 +105,25 @@
+   release(&tickslock);
+   return xticks;
+ }
++
++
++uint64
++sys_set_nice(void)
++{
++  int nice_val;
++  argint(0,&nice_val);
++  if(nice_val< 0)
++    return -1;
++
++  // Nice values must be between -20 and 19
++  if(nice_val < -20 || nice_val > 19) {
++    return -1;
++  }
++
++  #if defined(CFS)
++    myproc()->nice = nice_val;
++  #endif
++  
++  return 0;
++}
++
+diff -Naur '--exclude=.git' xv6-riscv/kernel/trap.c xv6-modified/kernel/trap.c
+--- xv6-riscv/kernel/trap.c	2025-09-13 15:31:26.262844306 +0530
++++ xv6-modified/kernel/trap.c	2025-09-13 15:07:49.016989329 +0530
+@@ -81,8 +81,27 @@
+     kexit(-1);
+ 
+   // give up the CPU if this is a timer interrupt.
+-  if(which_dev == 2)
+-    yield();
++  if(which_dev == 2){
++    #if defined(CFS)
++      struct proc *p = myproc();
++      if(p){
++        // Update vruntime based on nice value
++        int weight = nice_to_weight[p->nice + 20];
++        // Use scaled integer math: vruntime += (1 tick * 1024*1024) / weight
++        p->vruntime += (1048576) / weight;
++        
++        p->time_slice--;
++        if(p->time_slice <= 0) {
++          yield();
++        }
++      } else {
++        yield();
++      }
++    #else
++      // Default FCFS/RR behavior on timer interrupt
++      yield();
++    #endif
++  }
+ 
+   prepare_return();
+ 
+@@ -152,8 +171,26 @@
+   }
+ 
+   // give up the CPU if this is a timer interrupt.
+-  if(which_dev == 2 && myproc() != 0)
+-    yield();
++  if(which_dev == 2) {
++    #if defined(CFS)
++      struct proc *p = myproc();
++      if(p && p->state == RUNNING){
++        // Update vruntime based on nice value
++        int weight = nice_to_weight[p->nice + 20];
++        // Use scaled integer math: vruntime += (1 tick * 1024*1024) / weight
++        p->vruntime += (1048576) / weight;
++        
++        p->time_slice--;
++        if(p->time_slice <= 0) {
++          yield();
++        }
++      }
++    #else
++      // Default FCFS/RR behavior on timer interrupt
++      if(myproc() != 0 && myproc()->state == RUNNING)
++        yield();
++    #endif
++  }
+ 
+   // the yield() may have caused some traps to occur,
+   // so restore trap registers for use by kernelvec.S's sepc instruction.
+diff -Naur '--exclude=.git' xv6-riscv/Makefile xv6-modified/Makefile
+--- xv6-riscv/Makefile	2025-09-13 15:31:26.260496453 +0530
++++ xv6-modified/Makefile	2025-09-13 15:13:53.751421665 +0530
+@@ -28,7 +28,8 @@
+   $K/sysfile.o \
+   $K/kernelvec.o \
+   $K/plic.o \
+-  $K/virtio_disk.o
++  $K/virtio_disk.o \
++  
+ 
+ # riscv64-unknown-elf- or riscv64-linux-gnu-
+ # perhaps in /opt/riscv/bin
+@@ -73,6 +74,7 @@
+ CFLAGS += -I.
+ CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
+ 
++
+ # Disable PIE when possible (for Ubuntu 16.10 toolchain)
+ ifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]no-pie'),)
+ CFLAGS += -fno-pie -no-pie
+@@ -81,6 +83,13 @@
+ CFLAGS += -fno-pie -nopie
+ endif
+ 
++ifeq ($(SCHEDULER), FCFS)
++	CFLAGS += -DFCFS
++endif
++ifeq ($(SCHEDULER), CFS)
++	CFLAGS += -DCFS
++endif
++
+ LDFLAGS = -z max-page-size=4096
+ 
+ $K/kernel: $(OBJS) $K/kernel.ld
+@@ -142,6 +151,8 @@
+ 	$U/_logstress\
+ 	$U/_forphan\
+ 	$U/_dorphan\
++	$U/_scheduler_test \
++	$U/_readcount
+ 
+ fs.img: mkfs/mkfs README $(UPROGS)
+ 	mkfs/mkfs fs.img README $(UPROGS)
+diff -Naur '--exclude=.git' xv6-riscv/user/readcount.c xv6-modified/user/readcount.c
+--- xv6-riscv/user/readcount.c	1970-01-01 05:30:00.000000000 +0530
++++ xv6-modified/user/readcount.c	2025-09-13 12:46:29.626261877 +0530
+@@ -0,0 +1,39 @@
++#include "kernel/types.h"
++#include "kernel/stat.h"
++#include "user/user.h"
++
++int
++main(int argc, char *argv[])
++{
++    int fd;
++    char buf[100];
++    int n;
++
++    // Call getreadcount before reading
++    uint64 before = getreadcount();
++    printf("Read count before: %d\n", (int)before);
++
++    // Open a file
++    if(argc < 2){
++        printf("Usage: readcount filename\n");
++        exit(1);
++    }
++
++    fd = open(argv[1], 0);
++    if(fd < 0){
++        printf("Cannot open %s\n", argv[1]);
++        exit(1);
++    }
++
++    // Read 100 bytes
++    n = read(fd, buf, sizeof(buf));
++    printf("Read %d bytes from file %s\n", n, argv[1]);
++
++    close(fd);
++
++    // Call getreadcount after reading
++    uint64 after = getreadcount();
++    printf("Read count after: %d\n", (int)after);
++
++    exit(0);
++}
+diff -Naur '--exclude=.git' xv6-riscv/user/scheduler_test.c xv6-modified/user/scheduler_test.c
+--- xv6-riscv/user/scheduler_test.c	1970-01-01 05:30:00.000000000 +0530
++++ xv6-modified/user/scheduler_test.c	2025-09-13 15:22:33.299879008 +0530
+@@ -0,0 +1,28 @@
++#include "kernel/types.h"
++#include "kernel/stat.h"
++#include "user/user.h"
++#include "kernel/fcntl.h"
++
++#define NFORK 10
++#define IO 5
++
++int main() {
++  int n, pid;
++  
++  for (n = 0; n < NFORK; n++) {
++    pid = fork();
++    if (pid < 0)
++      break;
++    if (pid == 0) {
++      if (n < IO) {
++        pause(200); // IO-bound process
++      } else {
++        for (volatile int i = 0; i < 1000000000; i++) {} // CPU-bound process
++      }
++      // printf("\nProcess %d finished\n", n);
++      exit(0);
++    }
++  }
++  exit(0);
++}
++
+diff -Naur '--exclude=.git' xv6-riscv/user/user.h xv6-modified/user/user.h
+--- xv6-riscv/user/user.h	2025-09-13 15:31:26.264170170 +0530
++++ xv6-modified/user/user.h	2025-09-13 15:19:22.366484831 +0530
+@@ -24,6 +24,8 @@
+ char* sys_sbrk(int,int);
+ int pause(int);
+ int uptime(void);
++uint64 getreadcount(void);
++int set_nice(int);
+ 
+ // ulib.c
+ int stat(const char*, struct stat*);
+diff -Naur '--exclude=.git' xv6-riscv/user/usys.pl xv6-modified/user/usys.pl
+--- xv6-riscv/user/usys.pl	2025-09-13 15:31:26.264844367 +0530
++++ xv6-modified/user/usys.pl	2025-09-13 15:19:07.704888650 +0530
+@@ -42,3 +42,5 @@
+ entry("sbrk");
+ entry("pause");
+ entry("uptime");
++entry("getreadcount");
++entry("set_nice");
