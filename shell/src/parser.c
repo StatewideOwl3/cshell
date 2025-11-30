@@ -171,6 +171,7 @@ struct shell_cmd* tokenizeShellCommand(char* shellCommandString){
 
         // when we encounter a non-whitespace character, it indicates the start of a command
         int cmdInstanceStart = i;
+        // Create a cmd_group struct to capture this cmd_group
         struct cmd_group* cmdGroupInstance = (struct cmd_group*)malloc(sizeof(struct cmd_group));
         if (cmdGroupInstance == NULL) {
             //perror("Failed to allocate memory for cmd_group");
@@ -178,6 +179,7 @@ struct shell_cmd* tokenizeShellCommand(char* shellCommandString){
             return NULL;
         }
         
+        // Parse till to find end of the cmd_group instance (; or & is seen)
         while(i<stringLength && (shellCommandString[i]!=';' && shellCommandString[i]!='&' )){
             i++;
         }
@@ -204,7 +206,7 @@ struct shell_cmd* tokenizeShellCommand(char* shellCommandString){
             return NULL;
         }
 
-        separatorChar[0] = shellCommandString[i];
+        separatorChar[0] = shellCommandString[i]; // stopped when ; or & was reached
         separatorChar[1] = '\0';
 
         // Add cmdGroupInstance and separatorChar to shellCommand's arrays
@@ -216,6 +218,7 @@ struct shell_cmd* tokenizeShellCommand(char* shellCommandString){
             if (shellCommand->cmdGroupArr == NULL || shellCommand->separatorArr == NULL) {
                 //perror("Failed to reallocate memory for cmdGroupArr or separatorArr");
                 // functions to free memory at each level
+                return NULL;
             }
         }
         shellCommand->cmdGroupArr[shellCommand->cmdArrIndex++] = cmdGroupInstance;
@@ -281,7 +284,7 @@ bool checkShellCmd(struct shell_cmd* shellCommand){
 
 struct cmd_group* tokenizeCmdGroup(struct cmd_group* cmdGroup){
     ////////////////////////////// LLM GENERATED CODE BEGNS /////////////////////////////////
-
+    // Passed struct only has cmd_string filled in
     // Initialize indices and validity
     cmdGroup->atomicArrIndex = 0;
     cmdGroup->sepArrIndex = 0;
@@ -299,6 +302,8 @@ struct cmd_group* tokenizeCmdGroup(struct cmd_group* cmdGroup){
     
     char* cmdString = cmdGroup->cmdString;
     int stringLength = strlen(cmdString);
+    
+    // Parse the command string to extract atomics
     int i = 0;
     while(i<stringLength){
         if (isWhitespace(cmdString[i])){
@@ -308,6 +313,7 @@ struct cmd_group* tokenizeCmdGroup(struct cmd_group* cmdGroup){
 
         // when we encounter a non-whitespace character, it indicates the start of an atomic command
         int atomicInstanceStart = i;
+        // Create atomic struct (this is what cmd_group is made of)
         struct atomic* atomicInstance = (struct atomic*)malloc(sizeof(struct atomic));
         if (atomicInstance == NULL) {
             //perror("Failed to allocate memory for atomic");
@@ -315,6 +321,7 @@ struct cmd_group* tokenizeCmdGroup(struct cmd_group* cmdGroup){
             return NULL;
         }
         
+        // Read an atomic group
         while(i<stringLength && cmdString[i]!='|'){
             i++;
         }
@@ -328,7 +335,7 @@ struct cmd_group* tokenizeCmdGroup(struct cmd_group* cmdGroup){
             return NULL;
         }
 
-        // copy the substring into the array
+        // Copy atomic string found in the cmd_group into atomic struct
         for (int temp = atomicInstanceStart; temp < atomicInstanceEnd; temp++) {
             atomicInstance->atomicString[temp - atomicInstanceStart] = cmdString[temp];
         }
@@ -340,7 +347,7 @@ struct cmd_group* tokenizeCmdGroup(struct cmd_group* cmdGroup){
             // functions to free memory at each level
             return NULL;
         }
-        separatorChar[0] = cmdString[i];
+        separatorChar[0] = cmdString[i]; // '|'
         separatorChar[1] = '\0';
 
         // Add atomicInstance and separatorChar to cmdGroup's arrays
@@ -361,7 +368,7 @@ struct cmd_group* tokenizeCmdGroup(struct cmd_group* cmdGroup){
         // Move to the next character after the separator
         i++;
     }
-    return cmdGroup;
+    return cmdGroup; // returns the completely filled in struct (array of atomics filled in)
 }
 
 bool checkCmdGroup(struct cmd_group* cmdGroup){
@@ -520,9 +527,11 @@ bool checkAtomic(struct atomic* atomicGroup){
         }
     }
 
+    // Redundant - already checked this in one level above
     if (strcmp(atomicGroup->separatorArr[atomicGroup->sepArrIndex-1], "|") == 0){
         return false; // Last separator should be empty
     }
+
     atomicGroup->validity = true;
     return true;
 }
@@ -541,11 +550,11 @@ struct terminal* tokenizeTerminal(struct terminal* terminalGroup){
 
     for (int i = 0; i < length; i++) {
         if (isWhitespace(terminalString[i])) {
-            // Skip whitespace
+            // Skip prefixed excess whitespace before processing cmd/arg
             continue;
         }
         // Here you can add more logic to tokenize the terminal string if needed
-        int tokenStart = i;
+        int tokenStart = i; // ends when we see a whitespace
         while (i < length && !isWhitespace(terminalString[i])) {
             i++;
         }
@@ -588,6 +597,7 @@ bool checkTerminals(struct terminal* terminalStruct){
             }
         }
     }
+    
     terminalStruct->validity = true;
     return true;
 }
@@ -782,8 +792,8 @@ void testAllTokenizers(){
 }
 
 struct shell_cmd* verifyCommand(char* inputCommand){
-    char* shell_cmd = inputCommand;
-    struct shell_cmd* shellResult = tokenizeShellCommand(shell_cmd);
+    // Generate and fill in a shell_cmd struct for this inputCommand
+    struct shell_cmd* shellResult = tokenizeShellCommand(inputCommand);
     if (shellResult == NULL) {
         //printf("Shell command tokenization failed.\n");
         return NULL;
@@ -791,12 +801,18 @@ struct shell_cmd* verifyCommand(char* inputCommand){
 
     for (int i = 0; i < shellResult->cmdArrIndex; i++) {
         //printf("Tokenizing command group %d of %d: %s\n", i+1, shellResult->cmdArrIndex, shellResult->cmdGroupArr[i]->cmdString);
+        
+        // For each cmd_group in shell_cmd's cmd_group array, tokenize it into its atomics (fill in this cmd_group struct fully with its atomic arrays)
+        // tokenize shell command function only put cmd_strings into cmd_group structs -> tokenize further and fill in the atomics array
         struct cmd_group* cmdGroupResult = tokenizeCmdGroup(shellResult->cmdGroupArr[i]);
         if (cmdGroupResult == NULL) {
             //printf("Cmd group tokenization failed for command group %d.\n", i + 1);
             return shellResult;
         }
-        shellResult->cmdGroupArr[i] = cmdGroupResult;
+        
+        shellResult->cmdGroupArr[i] = cmdGroupResult; // redundant?
+
+        // Take this filled in cmd_group, and for each atomic in the atomic array, tokenize it further down
         for (int j = 0; j < cmdGroupResult->atomicArrIndex; j++) {
             struct atomic* atomicResult = tokenizeAtomic(cmdGroupResult->atomicArr[j]);
             if (atomicResult == NULL) {
@@ -810,7 +826,7 @@ struct shell_cmd* verifyCommand(char* inputCommand){
                     //printf("Terminal tokenization failed for terminal %d in atomic command %d of command group %d.\n", k + 1, j + 1, i + 1);
                     return shellResult;
                 }
-                atomicResult->terminalArr[k] = terminalResult;
+                atomicResult->terminalArr[k] = terminalResult; // Redundant???
             }
         }
     }

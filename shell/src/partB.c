@@ -129,12 +129,14 @@ void executeReveal(struct atomic* atomicGroup){
         return;
     }
 
+    // Flags to indicate display formats..?
     int allFlag = 0;
     int lineFlag = 0;
 
     char* dirPath = NULL;
     int dirPath_allocated = 0; // 1 if dirPath should be freed
 
+    // Set flags
     for (int i = 1; i < argCount; i++) {
         if (args[i][0]=='-' && strstr(args[i], "a") != NULL) {
             allFlag = 1;
@@ -314,10 +316,14 @@ struct executedShellCommand* listHead = NULL;
 struct executedShellCommand* listTail = NULL;
 
 
+// Function to implement persistence feature for storing 15 most recent shell commands across sessions
 void loadLogs(){
+    // Start by constructing path string to files
     char* path = (char*)malloc(strlen(absoluteHomePath) + strlen("/logs.txt") + 1);
     strcpy(path, absoluteHomePath);
     strcat(path, "/logs.txt");
+
+    
     FILE* file = fopen(logFile, "r");
     if (file == NULL) {
         // If the file doesn't exist, it's not an error; just return
@@ -325,6 +331,7 @@ void loadLogs(){
     }
 
     char buffer[1024];
+    // Read one line in the file (one command) at a time and process them
     while (fgets(buffer, sizeof(buffer), file)) {
         // Remove newline character if present
         size_t len = strlen(buffer);
@@ -332,12 +339,14 @@ void loadLogs(){
             buffer[len - 1] = '\0';
         }
 
+        // Store the command locally in struct (string, next)
         struct executedShellCommand* newLog = malloc(sizeof(struct executedShellCommand));
-        newLog->shellCommandString = strdup(buffer);
+        newLog->shellCommandString = strdup(buffer); // Make copy in memory (buffer will die after exiting this func)
         newLog->next = NULL;
 
+        // listHead is the HEAD of the LL storing last 15 most recent commands across sessions
         if (listHead == NULL) {
-            // If the list is empty, the new log is both the head and tail
+            // If the list is empty (i.e just began loading from file), the new log is both the head and tail
             listHead = newLog;
             listTail = newLog;
             logListSize++;

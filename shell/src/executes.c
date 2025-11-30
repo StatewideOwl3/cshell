@@ -64,29 +64,33 @@ static void pid_seen_add(pid_t *seen, int *seen_count, pid_t pid, int max) {
     }
 }
 
-// Kill all known children/process groups (used on EOF)
+// Kill all known children/process groups (triggered on EOF)
 void kill_all_children(void) {
     // Collect unique PIDs from bg_job_head and job_list
     pid_t seen[512];
     int seen_count = 0;
 
+    // Iterate through bg jobs and jobs
+    // Add all jobs to the seen array, ensuring no duplicate additions
     struct bg_job* bj = bg_job_head;
     while (bj) { pid_seen_add(seen, &seen_count, bj->pid, (int)(sizeof(seen)/sizeof(seen[0]))); bj = bj->next; }
 
     struct job* j = job_list;
     while (j) { pid_seen_add(seen, &seen_count, j->pid, (int)(sizeof(seen)/sizeof(seen[0]))); j = j->next; }
-
+    
+    // Iterate through seen array  
     for (int i = 0; i < seen_count; i++) {
         pid_t pid = seen[i];
         pid_t pg = getpgid(pid);
         if (pg > 0) {
-            kill(-pg, SIGKILL);
+            kill(-pg, SIGKILL); // If process is part of group, kill all processes in the group
         } else {
             kill(pid, SIGKILL);
         }
     }
 }
 
+// Before we take next command, sweep through current bg jobs 
 void check_bg_jobs() {
     struct bg_job* prev = NULL;
     struct bg_job* cur = bg_job_head;
@@ -95,7 +99,8 @@ void check_bg_jobs() {
             int status = 0;
             pid_t result = waitpid(cur->pid, &status, WNOHANG);
             if (result > 0) {
-                if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+                // WIFEXITED - checks if proc exited via exit() or return from main
+                if (WIFEXITED(status) && WEXITSTATUS(status)==0) {
                     cur->status = 1; // exited normally
                 } else {
                     cur->status = 2; // exited abnormally
@@ -103,13 +108,14 @@ void check_bg_jobs() {
                 print_bg_job_status(cur->job_num, cur->pid, cur->cmd_name, cur->status);
                 // Remove node immediately after reporting
                 struct bg_job* to_free = cur;
-                if (prev) prev->next = cur->next; else bg_job_head = cur->next;
+                if (prev) prev->next = cur->next; else bg_job_head = cur->next; // Deleting fist node edge case
                 cur = cur->next;
                 free(to_free->cmd_name);
                 free(to_free);
-                continue; // skip prev advance
+                continue;
             }
         }
+        // If waitpid says job did not terminate yet, move on to other jobs in LL
         prev = cur;
         cur = cur->next;
     }
@@ -135,21 +141,26 @@ int is_bg_job_running(pid_t pid) {
 void executeShellCommand(struct shell_cmd* shellCommandStruct){
     bg_fork = 0;
     pipe_exists = 0;
+    // Just a safety net to check invalid shell_cmd again
     if (!shellCommandStruct || shellCommandStruct->validity == false || shellCommandStruct->cmdArrIndex==0) return;
     int num_cmdGroups = shellCommandStruct->cmdArrIndex;
+
+    // Loop through each cmdGroup in the cmdGroupArr
     for (int i = 0; i < num_cmdGroups; i++) {
         struct cmd_group* cmdGroup = shellCommandStruct->cmdGroupArr[i];
         if (cmdGroup && cmdGroup->validity) {
             // Check separator exists at this index and whether it's '&' for background
             if (i < shellCommandStruct->sepArrIndex && strcmp(shellCommandStruct->separatorArr[i], "&") == 0) {
+                // If "cmd_group &", need to run in BG, fork a new process
                 pid_t jobLeaderPid = fork();
                 if (jobLeaderPid < 0) {
                     perror("Fork failed");
                 } else if (jobLeaderPid == 0) {
                     // In child: set background flag and redirect stdin to /dev/null
-                    bg_fork = 1;
+                    bg_fork = 1; // Happens in child's memory address space only
+
                     // Create a new process group for the background job; child becomes group leader
-                    setpgid(0, 0);
+                    setpgid(0, 0); // Prevents signals sent to shell's fg group being recieved to BG processes if they are put in a new group
                     current_job_pgid = getpid();
                     // Reset default signal handling for the job
                     signal(SIGINT, SIG_DFL);
@@ -158,17 +169,18 @@ void executeShellCommand(struct shell_cmd* shellCommandStruct){
                     signal(SIGTTOU, SIG_DFL);
                     int devnull = open("/dev/null", O_RDONLY);
                     if (devnull >= 0) {
+                        // Make the FD STDIN refer to same FD as devnull so that this child bg process does not take input from terminal
                         dup2(devnull, STDIN_FILENO);
                         close(devnull);
                     }
                     // Execute the command group
-                    executeCmdGroup(cmdGroup);
+                    executeCmdGroup(cmdGroup); // Will run as BG (setup done here)
                     exit(0); // Exit child process after execution
                 } else {
                     // Parent: add to background jobs and print info
                     char* cmd_name = cmdGroup->cmdString ? cmdGroup->cmdString : "background job";
                     int job_num = add_bg_job(jobLeaderPid, cmd_name);
-                    // Also add to shell job list (parent) so activities can see it
+                    // Also add to shell (parent of this child) process' job list data structure (parent) so activities can see it
                     addJob(jobLeaderPid, cmd_name, 1);
                     if (job_num != -1) printf("[%d] %d\n", job_num, jobLeaderPid);
                     fflush(stdout);
@@ -179,7 +191,6 @@ void executeShellCommand(struct shell_cmd* shellCommandStruct){
             }
         }
     }
-
 }
 
 void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
@@ -194,7 +205,7 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
 
     // Create n-1 pipes for the pipeline
     int pipes[num_atomics - 1][2];
-    pipe_exists = 1;
+    pipe_exists = 1; // Signifies that we are inside a pipeline
     for (int j = 0; j < num_atomics - 1; j++) {
         if (pipe(pipes[j]) == -1) {
             perror("pipe failed");
@@ -202,7 +213,7 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
         }
     }
 
-    // Fork and set up each atomic in the pipeline (foreground only). We should NOT
+    // Fork and set up each atomic in the pipeline (foreground). We should NOT
     // register these children as background jobs for the activities list because
     // the user only expects background (&) jobs there. Foreground pipeline
     // children are waited on immediately below.
@@ -223,7 +234,7 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
                 // foreground pipeline: first child becomes group leader, others join
                 if (i == 0) setpgid(0, 0); else setpgid(0, pgid > 0 ? pgid : getpid());
             }
-            // Reset default signal handling in children
+            // Reset default signal handling for fg child processes
             signal(SIGINT, SIG_DFL);
             signal(SIGTSTP, SIG_DFL);
             signal(SIGTTIN, SIG_DFL);
@@ -232,20 +243,22 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
                 // STDIN of this new child process is now set to pipe
                 dup2(pipes[i-1][0], STDIN_FILENO);
             }
-            if (i < num_atomics - 1) {  // Not the last atomic: write to next pipe
-                // STDOUT of this new child process is now set to write of next pipe
+            if (i < num_atomics - 1) {  // Not the last atomic: write to pipe
+                // STDOUT of this new child process is now set to write of pipe
                 dup2(pipes[i][1], STDOUT_FILENO);
             }
-            // Close all pipe ends in child since STDIN
+
+            // Close all pipe ends in child since STDIN and STDOUT are now set correctly
             for (int k = 0; k < num_atomics - 1; k++) {
                 close(pipes[k][0]);
                 close(pipes[k][1]);
             }
+
             // Execute the atomic
             executeAtomicCmd(atomicCmd);
             exit(0);  // Exit child after execution
         } else {
-            // Parent: set up process group id for the pipeline
+            // Parent: set up process group id for the pipeline in shell process' memory too
             if (!bg_fork) {
                 if (i == 0) {
                     pgid = pids[0];
@@ -257,7 +270,7 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
         }
     }
 
-    // Parent: Close all pipe ends
+    // Parent: Close all pipe ends - only needed them for children
     for (int j = 0; j < num_atomics - 1; j++) {
         close(pipes[j][0]);
         close(pipes[j][1]);
@@ -269,6 +282,7 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
         if (isatty(STDIN_FILENO) && pgid > 0) tcsetpgrp(STDIN_FILENO, pgid);
         int status;
         int any_stopped = 0;
+        // Check if any atomic command in pipeline got stopped
         for (int i = 0; i < num_atomics; i++) {
             if (pids[i] > 0) {
                 if (waitpid(pids[i], &status, WUNTRACED) > 0) {
@@ -286,7 +300,7 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
             } else {
                 job_num = add_bg_job(pgid, (char*)name);
             }
-            // Update activities: ensure present and marked stopped
+            // Update activities: ensure present, if not create, marked stopped
             struct job* aj = find_activity_job(pgid);
             if (!aj) addJob(pgid, (char*)name, 0); else aj->running = 0;
             if (job_num != -1) {
@@ -306,8 +320,11 @@ void executeCmdGroup(struct cmd_group* cmdGroupStruct) {
 void executeAtomicCmd(struct atomic* atomicCmdStruct) {
     if (!atomicCmdStruct || atomicCmdStruct->validity == 0 || atomicCmdStruct->termArrIndex == 0) return;
 
+    // Immedaitely return if the first command is empty
     struct terminal* firstTerm = atomicCmdStruct->terminalArr[0];
     if (!firstTerm || firstTerm->cmdAndArgsIndex == 0) return;
+
+    // --- Prepare first command and args ---
     char** args = firstTerm->cmdAndArgs;
     char* cmd = args[0];
 
@@ -327,7 +344,7 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
     // --- Apply all redirections ---
     for (int i = 0; i < atomicCmdStruct->sepArrIndex - 1; i++) {
         char* sep = atomicCmdStruct->separatorArr[i];
-        struct terminal* fnameTerm = fnameTerm = atomicCmdStruct->terminalArr[i+1];
+        struct terminal* fnameTerm = atomicCmdStruct->terminalArr[i+1];
 
         if (!sep || !fnameTerm || fnameTerm->cmdAndArgsIndex == 0) continue;
         char* filename = fnameTerm->cmdAndArgs[0];
@@ -360,7 +377,7 @@ void executeAtomicCmd(struct atomic* atomicCmdStruct) {
         else if (!strcmp(cmd, "activities")) printActivities();
         else if (!strcmp(cmd, "ping"))   executePing(atomicCmdStruct);
         else if (!strcmp(cmd, "fg")) {
-            // fg [job_number]
+            // fg [job_number] command
             int job_num = -1;
             if (firstTerm->cmdAndArgsIndex == 1) {
                 job_num = most_recent_job_num();

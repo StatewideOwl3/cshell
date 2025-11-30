@@ -15,8 +15,11 @@ bool isSubstring(char* absPath, char* currPath){
     return false;
 }
 
+
+// Function to implement path print in the prompt.
+// If current abs path is a subdir of absHome path, just print the sub-path with ~ to indicate HOME
 char* getPathToPrint(char* absPath, char* currPath){
-    if (isSubstring(absPath, currPath)){
+    if (isSubstring(absPath, currPath)){ // currPath == "absPath/some/sub/dir"
         size_t remainingLen = strlen(currPath) - strlen(absPath);
         char* newPath = (char*)malloc(remainingLen + 2); // +1 for '~', +1 for null terminator
         if (newPath == NULL) {

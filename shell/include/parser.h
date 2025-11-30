@@ -12,10 +12,10 @@
 
 
 struct shell_cmd{
-
+    // Struct representing full user input shell command
     bool validity;
     struct cmd_group** cmdGroupArr; // array of pointers to cmd_group tokens
-    char** separatorArr; // & or ;
+    char** separatorArr; // & or ; (separating char between cmd_group tokens)
     int cmdArrIndex;
     int sepArrIndex;
 };
@@ -32,7 +32,6 @@ struct cmd_group{
 };
 
 struct atomic{
-
     char* atomicString;
     bool validity;
     struct terminal** terminalArr; // array of name types
