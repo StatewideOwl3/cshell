@@ -5,7 +5,9 @@
 #include <string.h>
 
 #include <unistd.h>
+#include <sys/types.h>
 #include <sys/utsname.h>
+#include <pwd.h>
  #include <signal.h>
  #include <termios.h>
  #include <errno.h>
@@ -42,8 +44,12 @@ int main(){
 
     char* username = getlogin();
     if (username == NULL){
-        perror("getlogin() error");
-        exit(1);
+        struct passwd* pw = getpwuid(getuid());
+        if (pw != NULL && pw->pw_name != NULL) {
+            username = pw->pw_name;
+        } else {
+            username = "user";
+        }
     }
 
     // Get the system name from uname struct

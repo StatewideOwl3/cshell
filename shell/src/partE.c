@@ -1,6 +1,21 @@
 #include "../include/partE.h"
 #include <sys/wait.h>
 #include <errno.h>
+#include <ctype.h>
+#include <string.h>
+
+static char* dup_trimmed(const char* src) {
+    if (src == NULL) src = "";
+    while (*src && isspace((unsigned char)*src)) src++;
+    const char* end = src + strlen(src);
+    while (end > src && isspace((unsigned char)*(end - 1))) end--;
+    size_t len = (size_t)(end - src);
+    char* out = malloc(len + 1);
+    if (!out) return NULL;
+    memcpy(out, src, len);
+    out[len] = '\0';
+    return out;
+}
 
 struct job* job_list = NULL;
 struct job* jobListTail = NULL;
@@ -11,7 +26,13 @@ void addJob(pid_t pid, char *cmd, int running) {
     //printf("adding job : %d %s %d", pid, cmd, running);
     struct job *new_job = malloc(sizeof(struct job));
     new_job->pid = pid;
-    new_job->command = strdup(cmd);
+    const char* base = cmd ? cmd : "";
+    char* trimmed = dup_trimmed(base);
+    if (!trimmed) {
+        free(new_job);
+        return;
+    }
+    new_job->command = trimmed;
     new_job->running = running;
     new_job->next = job_list;
     job_list = new_job;

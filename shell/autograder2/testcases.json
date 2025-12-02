@@ -1,0 +1,4992 @@
+{
+    "testcases": [
+        {
+            "section": "A.1",
+            "description": "Checks if the shell displays the correct initial prompt. The home directory is /app, so the prompt should display ~.",
+            "cmds": [],
+            "timeout": 2.0,
+            "strict_prompt": true,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.2",
+            "description": "Checks if the shell can handle a single empty input (user pressing enter).",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.2",
+            "description": "Checks if the shell can handle multiple consecutive empty inputs.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.2",
+            "description": "Checks if the shell accepts a simple line of text as a syntactically valid command.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hello world",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.2",
+            "description": "Tests if the shell can handle a very long but syntactically valid input.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a b c d e f g h i j k l m n o p q r s t u v w x y z a b c d e f g h i j k l m n o p q r s t u v w x y z a b c d e f g h i j k l m n o p q r s t u v w x y z",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.2",
+            "description": "Checks if the shell can handle an input containing only whitespace characters.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "   \\t  ",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests a simple valid command syntax. The shell should not output 'Invalid Syntax!'.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a simple command",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests a valid command with excessive whitespace between tokens.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "   a   b   c   ",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests a complex but valid chain of commands involving pipes, sequential execution, and backgrounding.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a | b | c ; d | e &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests valid syntax with various operators and no spaces between tokens.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a<f1|b>f2;c>>f3&",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests valid syntax with multiple background operators.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a & b & c &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests a long, valid chain of sequential commands ending in a background operator.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a;b;c;d;e;f;g;h;i;j;k;l;m;n;o;p &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with a leading pipe operator.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "| a",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with a trailing semicolon operator.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a ;",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with consecutive pipe operators.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a || b",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with consecutive semicolon operators.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a ;; b",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with a pipe followed by a semicolon.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a | ; b",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with a background operator followed by a semicolon.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a & ; b",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with an incomplete output redirection.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a >",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' where an input redirection is immediately followed by a pipe.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a < | b",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with empty commands between semicolons.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a ; ; b",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' when an operator is used as a filename for redirection.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a > |",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with a trailing pipe operator.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a |",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with consecutive background operators.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a & & b",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with a leading semicolon operator.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "; a",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with consecutive output redirection operators.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a > > f1",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with consecutive input redirection operators.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a < < f1",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' with a background operator immediately followed by a pipe.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a & | b",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests a complex but valid command involving pipes, redirections, sequential, and background operators.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a | b ; c > out.txt & d < in.txt | e ; f >> app.txt &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests valid syntax with no spaces between a command, an input redirection, and an output redirection.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "cmd<in>out",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests valid syntax with filenames/command names containing special characters permitted by the grammar.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "/usr/bin/gcc-11 src/main.o -o a.out",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests valid syntax where multiple I/O redirections are used in a single command. The shell should accept this syntax.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a<f1>f2<f3>>f4",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests valid syntax for a command that ends with a semicolon followed by a background operator.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "command1 ; command2 &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' when a redirection operator is not followed by a filename but by another operator.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "command < > output_file",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' when a command group after a semicolon starts with a redirection operator instead of a command name.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "command1 ; > output_file",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests a valid command and arguments containing various special characters allowed by the grammar for a 'name'.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "./path/to/script-v1.2+alpha --option=value",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests for 'Invalid Syntax!' when a pipe is followed by a background operator where a command is expected.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "command1 | & command2",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "A.3",
+            "description": "Tests a complex but valid command string with a mix of sequential, background, and pipe operators without spaces.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "a;b&c|d",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "B.1",
+            "description": "Tests sequential execution of multiple arguments for the hop command, including relative paths, parent directories, and the previous directory.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test/folder1/folder4",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder1/folder4"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder1/folder4",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop ../../folder2",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder2"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop -",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder1/folder4"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder1/folder4",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.1",
+            "description": "Tests that hop prints an error and does not change the current working directory when the target directory does not exist.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop non_existent_directory",
+                    "sequential_outputs": [
+                        {
+                            "text": "No such directory!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.1",
+            "description": "Tests that hop handles an attempt to change directory into a file, which should fail.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test/file4.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "No such directory!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.1",
+            "description": "Tests hop with a complex relative path involving parent directory navigation.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test/folder1/../../test/folder2",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder2"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.1",
+            "description": "Tests that 'hop' with no arguments and 'hop ~' both change the CWD to the home directory.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test/folder1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder1"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test/folder2",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder2"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop ~",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.1",
+            "description": "Tests that 'hop -' does nothing if no previous working directory is stored.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop -",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "B.1",
+            "description": "Tests sequential 'hop' arguments where one is invalid. The valid hops before and after the invalid one should still execute.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test/folder1 no_such_dir test/folder2",
+                    "sequential_outputs": [
+                        {
+                            "text": "No such directory!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.1",
+            "description": "Tests `hop` with absolute paths, the special `.` path, and navigating to the root directory.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop /app/test/folder1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder1"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop .",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder1"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop /",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "/"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.1",
+            "description": "Tests that `hop -` correctly swaps between the two most recent directories upon repeated use.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test/folder1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder1"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop ../folder2",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder2"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop -",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder1"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop -",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder2"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop ~",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop -",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder2"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.1",
+            "description": "Tests that `hop` prints an error for each invalid directory in a sequence and successfully navigates to the valid ones.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test/folder1 invalid1 test/folder2 invalid2",
+                    "sequential_outputs": [
+                        {
+                            "text": "No such directory!",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "No such directory!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.2",
+            "description": "Tests 'reveal -al' to ensure it lists all files and directories, including hidden ones, in a line-by-line and lexicographically sorted format.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "touch .hidden_file.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "mkdir .hidden_folder",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal -al",
+                    "sequential_outputs": [
+                        {
+                            "text": ".",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "..",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": ".hidden_file.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": ".hidden_folder",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "file4.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "file5.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder3",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.2",
+            "description": "Tests that reveal prints a syntax error when more than one path argument is provided.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal folder1 folder2",
+                    "sequential_outputs": [
+                        {
+                            "text": "reveal: Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal -l folder1 folder2",
+                    "sequential_outputs": [
+                        {
+                            "text": "reveal: Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.2",
+            "description": "Tests reveal on an empty directory, both with and without the -a flag.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "mkdir /app/test/empty_dir",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal empty_dir",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal -a empty_dir",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.2",
+            "description": "Tests reveal with a relative path argument to list contents of another directory.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test/folder1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder1"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal ../folder2",
+                    "sequential_outputs": [
+                        {
+                            "text": "file6.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.2",
+            "description": "Tests the 'reveal -l' flag to ensure it lists non-hidden items in a sorted, line-by-line format.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "touch .hidden_file",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal -l",
+                    "sequential_outputs": [
+                        {
+                            "text": "file4.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "file5.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder3",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.2",
+            "description": "Tests the behavior of 'reveal -', checking for the correct error when no previous directory exists and for correct listing otherwise.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal -",
+                    "sequential_outputs": [
+                        {
+                            "text": "No such directory!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test/folder1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder1"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop ../folder2",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder2"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal -",
+                    "sequential_outputs": [
+                        {
+                            "text": "file1.txt\\\\s+folder4",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.2",
+            "description": "Tests that reveal lists files in lexicographical (ASCII) order.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "mkdir sort_test",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop sort_test",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/sort_test"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "touch B a _ 1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal -l",
+                    "sequential_outputs": [
+                        {
+                            "text": "1",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "B",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "_",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "a",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal",
+                    "sequential_outputs": [
+                        {
+                            "text": "1\\\\s+B\\\\s+_\\\\s+a",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.2",
+            "description": "Tests that `reveal` on a file path produces a 'No such directory!' error, as it can only operate on directories.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal test/file4.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "No such directory!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal -al test/folder1/file1.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "No such directory!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.2",
+            "description": "Tests `reveal` using special path arguments like '.', '..', and '~' to list contents of the current, parent, and home directories.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test/folder1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~/test/folder1"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal -l .",
+                    "sequential_outputs": [
+                        {
+                            "text": "file1.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder4",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal -l ..",
+                    "sequential_outputs": [
+                        {
+                            "text": "file4.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "file5.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder3",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop /app",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": "~"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal -l ~",
+                    "sequential_outputs": [
+                        {
+                            "text": "shell.out",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "test",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.2",
+            "description": "Tests the default (no flags) output format of reveal, which should be space-separated and lexicographically sorted.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal test/folder3",
+                    "sequential_outputs": [
+                        {
+                            "text": "^file7.txt\\\\s+file8.txt\\\\s+file9.txt\\\\s*$",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.3",
+            "description": "Tests that using 'log execute' runs a command from history but does not alter the history itself.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "reveal",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log execute 1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log",
+                    "sequential_outputs": [
+                        {
+                            "text": "hop test",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "reveal",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.3",
+            "description": "Tests if command history persists across shell restarts and if 'log purge' correctly clears it.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop command1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop command2",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "reason": "Restarting shell to check for persistence"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log",
+                    "sequential_outputs": [
+                        {
+                            "text": "hop command1",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop command2",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log purge",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "reason": "Restarting shell to check for persistence"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "B.3",
+            "description": "Tests the 15-command history limit and ensures sequential duplicate commands are not logged.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 2",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 3",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 4",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 5",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 6",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 7",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 8",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 9",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 10",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 11",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 12",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 13",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 14",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 15",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 15",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 16",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop 17",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log",
+                    "sequential_outputs": [
+                        {
+                            "text": "hop 3",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 4",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 5",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 6",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 7",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 8",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 9",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 10",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 11",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 12",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 13",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 14",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 15",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 16",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop 17",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "B.3",
+            "description": "Tests 'log execute' with out-of-bounds indices (e.g., > history size, 0), which should result in no action.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop test",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log execute 3",
+                    "sequential_outputs": [
+                        {
+                            "text": "log: Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log execute 0",
+                    "sequential_outputs": [
+                        {
+                            "text": "log: Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.3",
+            "description": "Tests that the log command prints a syntax error for various invalid argument combinations.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "log foo",
+                    "sequential_outputs": [
+                        {
+                            "text": "log: Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log execute",
+                    "sequential_outputs": [
+                        {
+                            "text": "log: Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log execute foo",
+                    "sequential_outputs": [
+                        {
+                            "text": "log: Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log purge bar",
+                    "sequential_outputs": [
+                        {
+                            "text": "log: Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log log",
+                    "sequential_outputs": [
+                        {
+                            "text": "log: Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "B.3",
+            "description": "Tests that log-related commands (log, log purge, log execute) are not themselves added to the command history.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop command1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop command2",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log purge",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop command3",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log execute 1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log",
+                    "sequential_outputs": [
+                        {
+                            "text": "hop command3",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "B.3",
+            "description": "Tests the 1-based indexing of 'log execute', which should count from newest to oldest command.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop /app/test/folder1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop /app/test/folder2",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop /app/test/folder3",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log execute 1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder3",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log execute 3",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log",
+                    "sequential_outputs": [
+                        {
+                            "text": "hop /app/test/folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop /app/test/folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop /app/test/folder3",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.3",
+            "description": "Tests that `log` stores commands that are duplicates but not sequential, while ignoring sequential duplicates.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop a",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop b",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop a",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log",
+                    "sequential_outputs": [
+                        {
+                            "text": "hop a",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop b",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop a",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop a",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log",
+                    "sequential_outputs": [
+                        {
+                            "text": "hop a",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop b",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop a",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "B.3",
+            "description": "Tests that executing a `hop` command from history correctly changes the CWD and does not alter the history.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "hop /app/test/folder1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": "~/test/folder1"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "hop ../folder2",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": "~/test/folder2"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log execute 2",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": "~/test/folder1"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log execute 1",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": "~/test/folder2"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test/folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log",
+                    "sequential_outputs": [
+                        {
+                            "text": "hop /app/test/folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "hop ../folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "B.3",
+            "description": "Tests `log` commands on a fresh shell with no history to ensure they execute without error and produce no output.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "log",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log purge",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "log execute 1",
+                    "sequential_outputs": [
+                        {
+                            "text": "log: Invalid Syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.1",
+            "description": "Tests the execution of a simple, valid command (ls). The shell should not output 'Command not found!'.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ls",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "Command not found!",
+                            "is_re": false,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.1",
+            "description": "Tests that a non-existent command prints 'Command not found!'.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "nonexistentcommand",
+                    "sequential_outputs": [
+                        {
+                            "text": "Command not found!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.1",
+            "description": "Tests execution of a command specified with an absolute path.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "/bin/echo hello from absolute path",
+                    "sequential_outputs": [
+                        {
+                            "text": "hello from absolute path",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.2",
+            "description": "Tests basic input redirection. The content of file4.txt should be printed.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "cat < test/file4.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "This is file4.txt! I have 4 lines. This is line 1.",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "This is line 2.",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "This is line 3.",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "This is line 4.",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "C.2",
+            "description": "Tests input redirection from a non-existent file, expecting an error.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "cat < no_such_file.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "No such file or directory!?",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.2",
+            "description": "Tests that for multiple input redirections, only the last one takes effect.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "cat < test/file4.txt < test/file5.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "This is file5.txt! I have 5 lines. This is line 1.",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "This is line 2.",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "This is line 3.",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "This is line 4.",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "This is line 5.",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "C.2",
+            "description": "Tests that the shell checks for command existence before handling file redirection.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "nonexistentcommand < test/file4.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "Command not found!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "No such file or directory",
+                            "is_re": false,
+                            "negative_match": true
+                        },
+                        {
+                            "text": ".*cannot open.*",
+                            "is_re": true,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "C.2",
+            "description": "Tests input redirection without a space between the operator and the filename.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "cat <test/file4.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "This is file4.txt! I have 4 lines. This is line 1.",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "This is line 2.",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "This is line 3.",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "This is line 4.",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "C.2",
+            "description": "Tests multiple input redirections where the first file does not exist. The command should not execute.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "cat < nonexistent.txt < test/file4.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "No such file or directory!?",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "C.2",
+            "description": "Tests that redirecting input from a directory results in an error.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "cat < test/folder1",
+                    "sequential_outputs": [
+                        {
+                            "text": "cat: -: Is a directory",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "C.3",
+            "description": "Tests basic output redirection. Creates a file and verifies its content.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "echo hello world > output_file.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat output_file.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "hello world",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.3",
+            "description": "Tests that '>>' appends to a file rather than overwriting it.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "echo first line > test/file4.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "echo appended line >> test/file4.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat test/file4.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "first line",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "appended line",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "C.3",
+            "description": "Tests output redirection to a file in a non-existent directory.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "echo hello > non_existent_dir/file.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "Unable to create file for writing",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.3",
+            "description": "Tests that input redirection does not run a command if the file is not found.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "nonexistentcommand < new_file.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "No such file or directory!?",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [
+                        {
+                            "text": ".*Command not found.*",
+                            "is_re": true,
+                            "negative_match": true
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.3",
+            "description": "Tests that for multiple mixed output redirections, only the last one takes effect.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "echo hello > combo_redir.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "echo world >> combo_redir.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat combo_redir.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "hello",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "world",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "echo overwrite >> combo_redir.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "echo final > combo_redir.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat combo_redir.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "final",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.3",
+            "description": "Tests that output redirection does not redirect stderr. The error from ls should be printed to the terminal, and the output file should be empty.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ls non_existent_dir > out.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "ls: cannot access 'non_existent_dir': No such file or directory",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat out.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.3",
+            "description": "Tests that the append output redirection operator '>>' creates a new file if it does not exist.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "echo first line >> new_append_file.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat new_append_file.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "first line",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.3",
+            "description": "Tests that redirecting output to a directory results in an error.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "echo hello > test/folder1",
+                    "sequential_outputs": [
+                        {
+                            "text": "Unable to create file for writing",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "C.3",
+            "description": "Tests combined input and append-output redirection to the same file.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "echo initial content > same_file.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat < same_file.txt >> same_file.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "cat: -: input file is output file",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat same_file.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "initial content",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.4",
+            "description": "Tests a simple pipe to filter the output of ls.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ls test | grep folder",
+                    "sequential_outputs": [
+                        {
+                            "text": "folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder3",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "C.4",
+            "description": "Tests a three-command pipeline.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "echo one two three four five | wc -w | cat",
+                    "sequential_outputs": [
+                        {
+                            "text": "\\\\s*5\\\\s*",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.4",
+            "description": "Tests a pipeline combined with both input and output redirection.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "cat < test/file5.txt | grep have > pipe_output.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat pipe_output.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "This is file5.txt! I have 5 lines. This is line 1.",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "C.4",
+            "description": "Tests a pipeline where a command in the middle is not found. The pipeline should still execute.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ls test | nonexistentcommand | wc -l",
+                    "sequential_outputs": [
+                        {
+                            "text": "Command not found!",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "\\\\s*0\\\\s*",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "C.4",
+            "description": "Tests a pipeline with input redirection on the first command and output redirection on the last.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "cat < test/file5.txt | grep have | wc -c > pipe_redir_output.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat pipe_redir_output.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "51",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "C.4",
+            "description": "Tests a long pipeline to ensure multiple pipes are handled correctly.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "echo test | cat | cat | cat | wc -c",
+                    "sequential_outputs": [
+                        {
+                            "text": "5",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.4",
+            "description": "Tests that stderr from a piped command is not redirected to the next command.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ls /nonexistent | wc -c",
+                    "sequential_outputs": [
+                        {
+                            "text": "ls: cannot access .*'/nonexistent'.*: No such file or directory",
+                            "is_re": true,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "\\\\s*0\\\\s*",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.4",
+            "description": "Tests a pipeline where the first command is invalid, ensuring subsequent commands still run.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "nonexistentcommand | wc -l",
+                    "sequential_outputs": [
+                        {
+                            "text": "Command not found!",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "\\\\s*0\\\\s*",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "C.4",
+            "description": "Tests that output redirection on a non-final command in a pipeline correctly redirects that command's output, starving the next command in the pipe.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ls test > ls_out.txt | wc -l",
+                    "sequential_outputs": [
+                        {
+                            "text": "\\\\s*0\\\\s*",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat ls_out.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "file4.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "file5.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder3",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "D.1",
+            "description": "Tests basic sequential execution with two simple commands.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ls -1 test ; pwd",
+                    "sequential_outputs": [
+                        {
+                            "text": "file4.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "file5.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder3",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "/app",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "D.1",
+            "description": "Tests that sequential execution continues after a command fails.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "non_existent_command ; echo second command runs",
+                    "sequential_outputs": [
+                        {
+                            "text": "Command not found!",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "second command runs",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "D.1",
+            "description": "Tests sequential execution where commands involve pipes and I/O redirection.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ls test | grep file > seq_out.txt ; cat seq_out.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "file4.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "file5.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "D.1",
+            "description": "Tests that state changes (CWD) are maintained across commands in a single sequential execution string.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "mkdir test_dir ; hop test_dir ; pwd ; hop .. ; rm -r test_dir",
+                    "sequential_outputs": [
+                        {
+                            "text": "/app/test_dir",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "D.1",
+            "description": "Tests a long sequence of simple commands to ensure they are all executed in the correct order.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "echo 1 ; echo 2 ; echo 3 ; echo 4 ; echo 5",
+                    "sequential_outputs": [
+                        {
+                            "text": "1",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "2",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "3",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "4",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "5",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "D.2",
+            "description": "Tests a simple background command, checking for the job ID and the subsequent completion message.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 1 &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 0.9",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "echo check cleanup",
+                    "sequential_outputs": [
+                        {
+                            "text": "check cleanup",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "(sleep\\\\s1|sleep) with pid \\\\d+ exited normally",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 3.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "D.2",
+            "description": "Tests that a background command that fails produces an 'exited abnormally' message.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "false &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "echo check abnormal exit",
+                    "sequential_outputs": [
+                        {
+                            "text": "check abnormal exit",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "false with pid \\\\d+ exited abnormally",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "D.2",
+            "description": "Tests a sequential command followed by a background command, ensuring the first part waits and the second does not.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "echo sequential part ; sleep 1 &",
+                    "sequential_outputs": [
+                        {
+                            "text": "sequential part",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 0.9",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "echo check cleanup",
+                    "sequential_outputs": [
+                        {
+                            "text": "check cleanup",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "(sleep\\\\s1|sleep) with pid \\\\d+ exited normally",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 3.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "D.2",
+            "description": "Tests the '& ;' operator sequence to ensure one command is backgrounded and the next is run in the foreground.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 1 & echo foreground now",
+                    "sequential_outputs": [
+                        {
+                            "text": "foreground now",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 0.9",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "echo check cleanup",
+                    "sequential_outputs": [
+                        {
+                            "text": "check cleanup",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "(sleep\\\\s1|sleep) with pid \\\\d+ exited normally",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "D.2",
+            "description": "Tests running a command with pipes in the background and checks for multiple cleanup messages.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ls -1 test | wc -l > meow.txt &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat meow.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "5",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "(ls\\\\s-1\\\\stest\\\\s\\\\|\\\\swc\\\\s-l\\\\s>\\\\smeow.txt|ls|wc|ls\\\\s-1\\\\stest|wc\\\\s-l\\\\s>\\\\smeow.txt) with pid \\\\d+ exited normally",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "D.2",
+            "description": "Tests that a non-existent command run in the background fails gracefully.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "iamnotarealcommand &",
+                    "sequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "iamnotarealcommand with pid \\\\d+ exited abnormally",
+                            "is_re": true,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "Command not found!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ]
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "D.2",
+            "description": "Tests a background command that involves both a pipe and output redirection.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ls test | sort -r > bg_out.txt &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat bg_out.txt",
+                    "sequential_outputs": [
+                        {
+                            "text": "folder3",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder2",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "folder1",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "file5.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "file4.txt",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "(ls\\\\stest\\\\s\\\\|\\\\ssort\\\\s-r\\\\s>\\\\sbg_out.txt|ls\\\\stest|sort\\\\s-r\\\\s>\\\\sbg_out.txt|ls|sort) with pid \\\\d+ exited normally",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "rm bg_out.txt",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": true
+        },
+        {
+            "section": "D.2",
+            "description": "Tests that a background process is correctly detached from terminal input, causing it to receive an immediate EOF.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "cat > meow.txt &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "ps aux | grep cat | grep -v grep",
+                    "sequential_outputs": [
+                        {
+                            "text": ".*?T.*?cat",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.1",
+            "description": "Checks if the activities command works correctly when no background processes are running.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "activities",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.1",
+            "description": "Checks if activities correctly lists a single running background process.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 2 &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "activities",
+                    "sequential_outputs": [
+                        {
+                            "text": "\\\\[\\\\d+\\\\] : (sleep|sleep\\\\s2) - Running",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.1",
+            "description": "Checks if activities correctly lists multiple running background processes in lexicographical order.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 2 &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "cat > meow.txt &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[2\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "wc &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[3\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "activities",
+                    "sequential_outputs": [
+                        {
+                            "text": "\\\\[\\\\d+\\\\] : (cat|cat\\\\s>\\\\smeow.txt) - Stopped",
+                            "is_re": true,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "\\\\[\\\\d+\\\\] : (sleep|sleep\\\\s2) - Running",
+                            "is_re": true,
+                            "negative_match": false
+                        },
+                        {
+                            "text": "\\\\[\\\\d+\\\\] : wc - Stopped",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.1",
+            "description": "Checks if activities correctly lists a stopped process after sending SIGTSTP (Ctrl+Z).",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 2",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null,
+                    "skip_prompt_check": true
+                },
+                {
+                    "expect_exit": false,
+                    "code": "z",
+                    "output": {
+                        "text": "\\\\[1\\\\] Stopped (sleep|sleep\\\\s2)",
+                        "is_re": true,
+                        "negative_match": false
+                    }
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "activities",
+                    "sequential_outputs": [
+                        {
+                            "text": "\\\\[\\\\d+\\\\] : (sleep|sleep\\\\s2) - Stopped",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.1",
+            "description": "Checks if activities correctly removes a process from its list after it has terminated.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 0.5 &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 0.5",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 0.5",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": true,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "activities",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 3.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.2",
+            "description": "Tests ping command with a PID that does not exist.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ping 99999 9",
+                    "sequential_outputs": [
+                        {
+                            "text": "No such process found",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.2",
+            "description": "Tests ping command with a non-numeric signal number.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ping 12345 abc",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.2",
+            "description": "Tests ping command with missing arguments.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "ping",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "ping 12345",
+                    "sequential_outputs": [
+                        {
+                            "text": "Invalid syntax!",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.3",
+            "description": "Tests that Ctrl+C (SIGINT) terminates the foreground process but not the shell.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 5",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null,
+                    "skip_prompt_check": true
+                },
+                {
+                    "expect_exit": false,
+                    "code": "c"
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "echo Shell is still alive",
+                    "sequential_outputs": [
+                        {
+                            "text": "Shell is still alive",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.3",
+            "description": "Tests that Ctrl+D on an empty line exits the shell. Note: This does not check for the 'logout' message.",
+            "cmds": [
+                {
+                    "expect_exit": true,
+                    "code": "d"
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.3",
+            "description": "Tests that Ctrl+D kills background jobs before exiting.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 5 &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": true,
+                    "code": "d"
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.4",
+            "description": "Tests that 'bg' command resumes a stopped job in the background.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 5",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null,
+                    "skip_prompt_check": true
+                },
+                {
+                    "expect_exit": false,
+                    "code": "z",
+                    "output": {
+                        "text": "\\\\[1\\\\] Stopped (sleep|sleep\\\\s5)",
+                        "is_re": true,
+                        "negative_match": false
+                    }
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "bg 1",
+                    "sequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] (sleep|sleep\\\\s5)",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "activities",
+                    "sequential_outputs": [
+                        {
+                            "text": "\\\\[\\\\d+\\\\] : (sleep|sleep\\\\s5) - Running",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.4",
+            "description": "Tests that running 'bg' on an already running job produces an error.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 2 &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "bg 1",
+                    "sequential_outputs": [
+                        {
+                            "text": "Job already running",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.4",
+            "description": "Tests that running 'bg' on a non-existent job number produces an error.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "bg 99",
+                    "sequential_outputs": [
+                        {
+                            "text": "No such job",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 2.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.4",
+            "description": "Tests that 'fg' brings a background job to the foreground and waits for it.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 1 &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "fg 1",
+                    "sequential_outputs": [
+                        {
+                            "text": "sleep 1",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 3.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        },
+        {
+            "section": "E.4",
+            "description": "Tests that 'fg' without a job number brings the most recently created job to the foreground.",
+            "cmds": [
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 4 &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[1\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "sleep 1 &",
+                    "sequential_outputs": [],
+                    "nonsequential_outputs": [
+                        {
+                            "text": "\\\\[2\\\\] \\\\d+",
+                            "is_re": true,
+                            "negative_match": false
+                        }
+                    ],
+                    "ignore_output": false,
+                    "cwd_after": null
+                },
+                {
+                    "expect_exit": false,
+                    "cmd": "fg",
+                    "sequential_outputs": [
+                        {
+                            "text": "sleep 1",
+                            "is_re": false,
+                            "negative_match": false
+                        }
+                    ],
+                    "nonsequential_outputs": [],
+                    "ignore_output": false,
+                    "cwd_after": null
+                }
+            ],
+            "timeout": 3.0,
+            "strict_prompt": false,
+            "requires_test_folder": false
+        }
+    ]
+}

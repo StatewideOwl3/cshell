@@ -1,0 +1,45 @@
+{
+    "testcase": {
+        "section": "C.4",
+        "description": "Tests a pipeline where the first command is invalid, ensuring subsequent commands still run.",
+        "cmds": [
+            {
+                "expect_exit": false,
+                "skip_prompt_check": false,
+                "cmd": "nonexistentcommand | wc -l",
+                "sequential_outputs": [
+                    {
+                        "text": "Command not found!",
+                        "is_re": false,
+                        "negative_match": false
+                    },
+                    {
+                        "text": "\\\\s*0\\\\s*",
+                        "is_re": true,
+                        "negative_match": false
+                    }
+                ],
+                "nonsequential_outputs": [],
+                "ignore_output": false,
+                "cwd_after": null
+            }
+        ],
+        "timeout": 2.0,
+        "strict_prompt": false,
+        "requires_test_folder": false
+    },
+    "events": [
+        {
+            "time": "2025-12-02T18:36:48.836126+05:30",
+            "type": "output",
+            "details": "getlogin() error: No such device or address"
+        },
+        {
+            "time": "2025-12-02T18:36:48.963814+05:30",
+            "type": "eof",
+            "details": "EOF received from child:\n    <pexpect.pty_spawn.spawn object at 0x71433c3a1950>\n    command: /usr/bin/docker\n    args: [b'/usr/bin/docker', b'run', b'--name', b'tester_9414ae6eac7143f29457bb1e6b4717cc', b'-i', b'-t', b'--rm', b'--init', b'-h', b'osntesting', b'-v', b'/tmp/tmp41jtbzd0:/app', b'-w', b'/app', b'shell_tester:latest', b'/app/shell.out']\n    buffer (last 100 chars): ''\n    before (last 100 chars): ''\n    after: <class 'pexpect.exceptions.EOF'>\n    match: <class 'pexpect.exceptions.EOF'>\n    match_index: 2\n    exitstatus: None\n    flag_eof: True\n    pid: 180986\n    child_fd: 32\n    closed: False\n    timeout: 2.0\n    delimiter: <class 'pexpect.exceptions.EOF'>\n    logfile: <tester.FlexibleIO object at 0x71433c285c60>\n    logfile_read: None\n    logfile_send: None\n    maxread: 2000\n    ignorecase: False\n    searchwindowsize: None\n    delaybeforesend: 0.05\n    delayafterclose: 0.1\n    delayafterterminate: 0.1"
+        }
+    ],
+    "raw_log": "##### START RAW OUTPUT #####\ngetlogin() error: No such device or address\r\n",
+    "py_log": "2025-12-02 18:36:48,683 - tester.52f23b7e-cc5f-4e84-8e66-941df4fd04c5 - INFO - Spawned child:\n    <pexpect.pty_spawn.spawn object at 0x71433c3a1950>\n    command: /usr/bin/docker\n    args: [b'/usr/bin/docker', b'run', b'--name', b'tester_9414ae6eac7143f29457bb1e6b4717cc', b'-i', b'-t', b'--rm', b'--init', b'-h', b'osntesting', b'-v', b'/tmp/tmp41jtbzd0:/app', b'-w', b'/app', b'shell_tester:latest', b'/app/shell.out']\n    buffer (last 100 chars): ''\n    before (last 100 chars): ''\n    after: None\n    match: None\n    match_index: None\n    exitstatus: None\n    flag_eof: False\n    pid: 180986\n    child_fd: 32\n    closed: False\n    timeout: 2.0\n    delimiter: <class 'pexpect.exceptions.EOF'>\n    logfile: <tester.FlexibleIO object at 0x71433c285c60>\n    logfile_read: None\n    logfile_send: None\n    maxread: 2000\n    ignorecase: False\n    searchwindowsize: None\n    delaybeforesend: 0.05\n    delayafterclose: 0.1\n    delayafterterminate: 0.1\n2025-12-02 18:36:48,836 - tester.52f23b7e-cc5f-4e84-8e66-941df4fd04c5 - DEBUG - Received event:\n    {\n        \"time\": \"2025-12-02T18:36:48.836126+05:30\",\n        \"type\": \"output\",\n        \"details\": \"getlogin() error: No such device or address\"\n    }\n2025-12-02 18:36:48,963 - tester.52f23b7e-cc5f-4e84-8e66-941df4fd04c5 - DEBUG - Received event:\n    {\n        \"time\": \"2025-12-02T18:36:48.963814+05:30\",\n        \"type\": \"eof\",\n        \"details\": \"EOF received from child:\\n    <pexpect.pty_spawn.spawn object at 0x71433c3a1950>\\n    command: /usr/bin/docker\\n    args: [b'/usr/bin/docker', b'run', b'--name', b'tester_9414ae6eac7143f29457bb1e6b4717cc', b'-i', b'-t', b'--rm', b'--init', b'-h', b'osntesting', b'-v', b'/tmp/tmp41jtbzd0:/app', b'-w', b'/app', b'shell_tester:latest', b'/app/shell.out']\\n    buffer (last 100 chars): ''\\n    before (last 100 chars): ''\\n    after: <class 'pexpect.exceptions.EOF'>\\n    match: <class 'pexpect.exceptions.EOF'>\\n    match_index: 2\\n    exitstatus: None\\n    flag_eof: True\\n    pid: 180986\\n    child_fd: 32\\n    closed: False\\n    timeout: 2.0\\n    delimiter: <class 'pexpect.exceptions.EOF'>\\n    logfile: <tester.FlexibleIO object at 0x71433c285c60>\\n    logfile_read: None\\n    logfile_send: None\\n    maxread: 2000\\n    ignorecase: False\\n    searchwindowsize: None\\n    delaybeforesend: 0.05\\n    delayafterclose: 0.1\\n    delayafterterminate: 0.1\"\n    }\n2025-12-02 18:36:48,964 - tester.52f23b7e-cc5f-4e84-8e66-941df4fd04c5 - INFO - Exit event received, raising ChildProcessExited\n2025-12-02 18:36:48,965 - tester.52f23b7e-cc5f-4e84-8e66-941df4fd04c5 - INFO - Finished running testcase. Child info at exit:\n    <pexpect.pty_spawn.spawn object at 0x71433c3a1950>\n    command: /usr/bin/docker\n    args: [b'/usr/bin/docker', b'run', b'--name', b'tester_9414ae6eac7143f29457bb1e6b4717cc', b'-i', b'-t', b'--rm', b'--init', b'-h', b'osntesting', b'-v', b'/tmp/tmp41jtbzd0:/app', b'-w', b'/app', b'shell_tester:latest', b'/app/shell.out']\n    buffer (last 100 chars): ''\n    before (last 100 chars): ''\n    after: <class 'pexpect.exceptions.EOF'>\n    match: <class 'pexpect.exceptions.EOF'>\n    match_index: 1\n    exitstatus: 1\n    flag_eof: True\n    pid: 180986\n    child_fd: 32\n    closed: False\n    timeout: 2.0\n    delimiter: <class 'pexpect.exceptions.EOF'>\n    logfile: <tester.FlexibleIO object at 0x71433c285c60>\n    logfile_read: None\n    logfile_send: None\n    maxread: 2000\n    ignorecase: False\n    searchwindowsize: None\n    delaybeforesend: 0.05\n    delayafterclose: 0.1\n    delayafterterminate: 0.1\n2025-12-02 18:36:48,965 - tester.52f23b7e-cc5f-4e84-8e66-941df4fd04c5 - INFO - Cleaned up temp_dir: /tmp/tmp41jtbzd0\n"
+}

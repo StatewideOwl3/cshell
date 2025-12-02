@@ -1,0 +1,40 @@
+{
+    "testcase": {
+        "section": "A.2",
+        "description": "Tests if the shell can handle a very long but syntactically valid input.",
+        "cmds": [
+            {
+                "expect_exit": false,
+                "skip_prompt_check": false,
+                "cmd": "a b c d e f g h i j k l m n o p q r s t u v w x y z a b c d e f g h i j k l m n o p q r s t u v w x y z a b c d e f g h i j k l m n o p q r s t u v w x y z",
+                "sequential_outputs": [],
+                "nonsequential_outputs": [
+                    {
+                        "text": "Invalid Syntax!",
+                        "is_re": false,
+                        "negative_match": true
+                    }
+                ],
+                "ignore_output": true,
+                "cwd_after": null
+            }
+        ],
+        "timeout": 2.0,
+        "strict_prompt": false,
+        "requires_test_folder": false
+    },
+    "events": [
+        {
+            "time": "2025-12-02T17:08:38.327509+05:30",
+            "type": "output",
+            "details": "getlogin() error: No such device or address"
+        },
+        {
+            "time": "2025-12-02T17:08:38.435932+05:30",
+            "type": "eof",
+            "details": "EOF received from child:\n    <pexpect.pty_spawn.spawn object at 0x77c7cfb33890>\n    command: /usr/bin/docker\n    args: [b'/usr/bin/docker', b'run', b'--name', b'tester_f40731352d4145369fcdb4b8bd5cd569', b'-i', b'-t', b'--rm', b'--init', b'-h', b'osntesting', b'-v', b'/tmp/tmp74ch6n2r:/app', b'-w', b'/app', b'shell_tester:latest', b'/app/shell.out']\n    buffer (last 100 chars): ''\n    before (last 100 chars): ''\n    after: <class 'pexpect.exceptions.EOF'>\n    match: <class 'pexpect.exceptions.EOF'>\n    match_index: 2\n    exitstatus: None\n    flag_eof: True\n    pid: 133700\n    child_fd: 13\n    closed: False\n    timeout: 2.0\n    delimiter: <class 'pexpect.exceptions.EOF'>\n    logfile: <tester.FlexibleIO object at 0x77c7d03ff250>\n    logfile_read: None\n    logfile_send: None\n    maxread: 2000\n    ignorecase: False\n    searchwindowsize: None\n    delaybeforesend: 0.05\n    delayafterclose: 0.1\n    delayafterterminate: 0.1"
+        }
+    ],
+    "raw_log": "##### START RAW OUTPUT #####\ngetlogin() error: No such device or address\r\n",
+    "py_log": "2025-12-02 17:08:38,170 - tester.a447d498-ead4-45f4-a643-31553948ac4b - INFO - Spawned child:\n    <pexpect.pty_spawn.spawn object at 0x77c7cfb33890>\n    command: /usr/bin/docker\n    args: [b'/usr/bin/docker', b'run', b'--name', b'tester_f40731352d4145369fcdb4b8bd5cd569', b'-i', b'-t', b'--rm', b'--init', b'-h', b'osntesting', b'-v', b'/tmp/tmp74ch6n2r:/app', b'-w', b'/app', b'shell_tester:latest', b'/app/shell.out']\n    buffer (last 100 chars): ''\n    before (last 100 chars): ''\n    after: None\n    match: None\n    match_index: None\n    exitstatus: None\n    flag_eof: False\n    pid: 133700\n    child_fd: 13\n    closed: False\n    timeout: 2.0\n    delimiter: <class 'pexpect.exceptions.EOF'>\n    logfile: <tester.FlexibleIO object at 0x77c7d03ff250>\n    logfile_read: None\n    logfile_send: None\n    maxread: 2000\n    ignorecase: False\n    searchwindowsize: None\n    delaybeforesend: 0.05\n    delayafterclose: 0.1\n    delayafterterminate: 0.1\n2025-12-02 17:08:38,327 - tester.a447d498-ead4-45f4-a643-31553948ac4b - DEBUG - Received event:\n    {\n        \"time\": \"2025-12-02T17:08:38.327509+05:30\",\n        \"type\": \"output\",\n        \"details\": \"getlogin() error: No such device or address\"\n    }\n2025-12-02 17:08:38,436 - tester.a447d498-ead4-45f4-a643-31553948ac4b - DEBUG - Received event:\n    {\n        \"time\": \"2025-12-02T17:08:38.435932+05:30\",\n        \"type\": \"eof\",\n        \"details\": \"EOF received from child:\\n    <pexpect.pty_spawn.spawn object at 0x77c7cfb33890>\\n    command: /usr/bin/docker\\n    args: [b'/usr/bin/docker', b'run', b'--name', b'tester_f40731352d4145369fcdb4b8bd5cd569', b'-i', b'-t', b'--rm', b'--init', b'-h', b'osntesting', b'-v', b'/tmp/tmp74ch6n2r:/app', b'-w', b'/app', b'shell_tester:latest', b'/app/shell.out']\\n    buffer (last 100 chars): ''\\n    before (last 100 chars): ''\\n    after: <class 'pexpect.exceptions.EOF'>\\n    match: <class 'pexpect.exceptions.EOF'>\\n    match_index: 2\\n    exitstatus: None\\n    flag_eof: True\\n    pid: 133700\\n    child_fd: 13\\n    closed: False\\n    timeout: 2.0\\n    delimiter: <class 'pexpect.exceptions.EOF'>\\n    logfile: <tester.FlexibleIO object at 0x77c7d03ff250>\\n    logfile_read: None\\n    logfile_send: None\\n    maxread: 2000\\n    ignorecase: False\\n    searchwindowsize: None\\n    delaybeforesend: 0.05\\n    delayafterclose: 0.1\\n    delayafterterminate: 0.1\"\n    }\n2025-12-02 17:08:38,436 - tester.a447d498-ead4-45f4-a643-31553948ac4b - INFO - Exit event received, raising ChildProcessExited\n2025-12-02 17:08:38,438 - tester.a447d498-ead4-45f4-a643-31553948ac4b - INFO - Finished running testcase. Child info at exit:\n    <pexpect.pty_spawn.spawn object at 0x77c7cfb33890>\n    command: /usr/bin/docker\n    args: [b'/usr/bin/docker', b'run', b'--name', b'tester_f40731352d4145369fcdb4b8bd5cd569', b'-i', b'-t', b'--rm', b'--init', b'-h', b'osntesting', b'-v', b'/tmp/tmp74ch6n2r:/app', b'-w', b'/app', b'shell_tester:latest', b'/app/shell.out']\n    buffer (last 100 chars): ''\n    before (last 100 chars): ''\n    after: <class 'pexpect.exceptions.EOF'>\n    match: <class 'pexpect.exceptions.EOF'>\n    match_index: 1\n    exitstatus: 1\n    flag_eof: True\n    pid: 133700\n    child_fd: 13\n    closed: False\n    timeout: 2.0\n    delimiter: <class 'pexpect.exceptions.EOF'>\n    logfile: <tester.FlexibleIO object at 0x77c7d03ff250>\n    logfile_read: None\n    logfile_send: None\n    maxread: 2000\n    ignorecase: False\n    searchwindowsize: None\n    delaybeforesend: 0.05\n    delayafterclose: 0.1\n    delayafterterminate: 0.1\n2025-12-02 17:08:38,438 - tester.a447d498-ead4-45f4-a643-31553948ac4b - INFO - Cleaned up temp_dir: /tmp/tmp74ch6n2r\n"
+}

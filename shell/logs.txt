@@ -1,0 +1,15 @@
+cat Makefile | grep all | wc -c >> out.txt & cat out.txt; cat out.txt
+cat Makefile | grep all | wc -c >> out.txt &
+cat out.txt
+clear
+ls
+man pcap
+clear
+ls
+clear
+ls
+echo hello world
+a >
+a < | b
+pwd
+echo sequential part ; sleep 1 &

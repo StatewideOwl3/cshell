@@ -3,6 +3,31 @@
 char* absoluteHomePath = NULL; // Global variable to hold the absolute home path
 
 char* oldWD = NULL;
+char* logFile = NULL;
+
+static const char* getLogFilePath(void) {
+    if (logFile != NULL) return logFile;
+    if (absoluteHomePath == NULL) return NULL;
+
+    size_t len = strlen(absoluteHomePath) + strlen("/logs.txt") + 1;
+    logFile = malloc(len);
+    if (logFile == NULL) return NULL;
+    strcpy(logFile, absoluteHomePath);
+    strcat(logFile, "/logs.txt");
+    return logFile;
+}
+
+static int refresh_directory_state(char** currentWD) {
+    char* updated = getcwd(NULL, 0);
+    if (updated == NULL) {
+        perror("getcwd() error");
+        return -1;
+    }
+    free(oldWD);
+    oldWD = *currentWD;
+    *currentWD = updated;
+    return 0;
+}
 
 static int cmp(const void* a, const void* b) {
     return strcmp(*(char**)a, *(char**)b);
@@ -22,70 +47,66 @@ void executeHop(struct atomic* atomicCmd){
     char** args = terminalCmd->cmdAndArgs;
 
     if (argCount < 2) {
-        // go to home directory
         if (chdir(absoluteHomePath) != 0) {
             perror("hop: chdir to home directory failed");
+            free(currentWD);
+            return;
+        }
+        if (refresh_directory_state(&currentWD) != 0) {
             free(currentWD);
             return;
         }
     }
 
     for (int i = 1; i < argCount; i++) {
+        int changed = 0;
         if (strcmp(args[i], "-") == 0) {
             if (oldWD == NULL) {
-                //perror("hop: OLDPWD not set\n");
-                free(currentWD);
-                return;
+                printf("No such directory!\n");
+                continue;
             }
             if (chdir(oldWD) != 0) {
-                //perror("hop: chdir to OLDPWD failed\n");
-                chdir(currentWD); // revert to current directory
-                free(currentWD);
-                return;
+                printf("No such directory!\n");
+                continue;
             }
-            //printf("%s\n", oldWD);
+            changed = 1;
         } 
         else if (strcmp(args[i], ".")==0){
             // stay in the same directory
             continue;
         }
         else if (strcmp(args[i], "..")==0){
-            // go to parent directory
             if (chdir("..") != 0) {
-                //perror("hop: chdir to parent directory failed\n");
-                chdir(currentWD); // revert to current directory
-                free(currentWD);
-                return;
+                printf("No such directory!\n");
+                continue;
             }
+            changed = 1;
         }
         else if (strcmp(args[i], "~")==0){
-            // go to home directory
             if (chdir(absoluteHomePath) != 0) {
                 perror("hop: chdir to home directory failed");
-                chdir(currentWD); // revert to current directory
                 free(currentWD);
                 return;
             }
+            changed = 1;
         }
         else {
-            // go to specified directory
             if (chdir(args[i]) != 0) {
                 printf("No such directory!\n");
-                chdir(currentWD); // revert to current directory
+                continue;
+            }
+            changed = 1;
+        }
+
+        if (changed) {
+            if (refresh_directory_state(&currentWD) != 0) {
                 free(currentWD);
                 return;
             }
-        }
-        // Update oldWD after a successful directory change
-        free(oldWD);
-        oldWD = currentWD;
-        currentWD = getcwd(NULL, 0);
-        if (currentWD == NULL){
-            perror("getcwd() error");
-            return;
         }
     }
 
+    free(currentWD);
 }
 
 bool checkRevealSyntax(struct atomic* atomicGroup) {
@@ -193,11 +214,9 @@ void executeReveal(struct atomic* atomicGroup){
         //printf("DEBUG: dirPath set to CWD: %s\n", dirPath);  // Add this for debugging
     }
 
-    // If dirPath refers to a regular file (or non-directory), print its name like ls
     struct stat st;
-    if (stat(dirPath, &st) == 0 && !S_ISDIR(st.st_mode)) {
-        if (lineFlag) printf("%s\n", dirPath);
-        else { printf("%s\n", dirPath); } // keep simple one-per-line for file target
+    if (stat(dirPath, &st) != 0 || !S_ISDIR(st.st_mode)) {
+        printf("No such directory!\n");
         if (dirPath_allocated) free(dirPath);
         return;
     }
@@ -205,7 +224,7 @@ void executeReveal(struct atomic* atomicGroup){
     DIR* dir = opendir(dirPath);
     struct dirent* entry;
     if (dir == NULL) {
-        // If cannot open directory and it's not a regular file, just silently return
+        printf("No such directory!\n");
         if (dirPath_allocated) free(dirPath);
         return;
     }
@@ -286,14 +305,14 @@ void executeLog(struct atomic* atomicCmd){
         logListSize = 0;
         saveLog();
     } else if (argCount == 3 && strcmp(args[1], "execute") == 0) {
-        // execute <index>
-        int index = atoi(args[2]);
-        if (index < 1 || index > logListSize) {
-            fprintf(stderr, "log: invalid index\n");
+        char* endptr = NULL;
+        long index = strtol(args[2], &endptr, 10);
+        if (endptr == args[2] || *endptr != '\0' || index < 1 || index > logListSize) {
+            fprintf(stderr, "log: Invalid Syntax!\n");
             return;
         }
         // Find the command: index 1 is newest (tail), index logListSize is oldest (head)
-        int target = logListSize - index + 1; // 1-based from head
+        int target = logListSize - (int)index + 1; // 1-based from head
         struct executedShellCommand* current = listHead;
         for (int i = 1; i < target; i++) {
             current = current->next;
@@ -306,11 +325,10 @@ void executeLog(struct atomic* atomicCmd){
         }
         freeShellCmd(shellCmdStruct);
     } else {
-        printf("log: invalid syntax\n");
+        fprintf(stderr, "log: Invalid Syntax!\n");
     }
 }
 
-char* logFile = "/home/saikapilbharadwaj/Documents/OSN/mini-project-1-StatewideOwl3/shell/logs.txt";
 int logListSize = 0;
 struct executedShellCommand* listHead = NULL;
 struct executedShellCommand* listTail = NULL;
@@ -318,15 +336,11 @@ struct executedShellCommand* listTail = NULL;
 
 // Function to implement persistence feature for storing 15 most recent shell commands across sessions
 void loadLogs(){
-    // Start by constructing path string to files
-    char* path = (char*)malloc(strlen(absoluteHomePath) + strlen("/logs.txt") + 1);
-    strcpy(path, absoluteHomePath);
-    strcat(path, "/logs.txt");
+    const char* path = getLogFilePath();
+    if (path == NULL) return;
 
-    
-    FILE* file = fopen(logFile, "r");
+    FILE* file = fopen(path, "r");
     if (file == NULL) {
-        // If the file doesn't exist, it's not an error; just return
         return;
     }
 
@@ -372,14 +386,11 @@ void loadLogs(){
 }
 
 void saveLog(){
-    char* path = (char*)malloc(strlen(absoluteHomePath) + strlen("/logs.txt") + 1);
-    strcpy(path, absoluteHomePath);
-    strcat(path, "/logs.txt");
-    FILE* file = fopen(logFile, "w+");
-    if (file == NULL) {
-        perror("Failed to open log file for writing");
-        return;
-    }
+    const char* path = getLogFilePath();
+    if (path == NULL) return;
+
+    FILE* file = fopen(path, "w");
+    if (file == NULL) return;
 
     struct executedShellCommand* current = listHead;
     while (current != NULL) {

@@ -1,5 +1,6 @@
 #include "../include/executes.h"
 #include <string.h>
+#include <ctype.h>
  #include <signal.h>
  #include <termios.h>
  #include <errno.h>
@@ -15,12 +16,30 @@ pid_t current_job_pgid = -1;
 struct bg_job* bg_job_head = NULL;
 int next_job_num = 1;
 
+static char* dup_trimmed(const char* src) {
+    if (src == NULL) src = "";
+    while (*src && isspace((unsigned char)*src)) src++;
+    const char* end = src + strlen(src);
+    while (end > src && isspace((unsigned char)*(end - 1))) end--;
+    size_t len = (size_t)(end - src);
+    char* out = malloc(len + 1);
+    if (!out) return NULL;
+    memcpy(out, src, len);
+    out[len] = '\0';
+    return out;
+}
+
 int add_bg_job(pid_t pid, char* cmd_name) {
     struct bg_job* node = malloc(sizeof(struct bg_job));
     if (!node) return -1;
     node->job_num = next_job_num++;
     node->pid = pid;
-    node->cmd_name = strdup(cmd_name ? cmd_name : "(null)");
+    const char* source = (cmd_name && *cmd_name) ? cmd_name : "job";
+    node->cmd_name = dup_trimmed(source);
+    if (!node->cmd_name) {
+        free(node);
+        return -1;
+    }
     node->status = 0;
     node->next = bg_job_head;
     bg_job_head = node;
