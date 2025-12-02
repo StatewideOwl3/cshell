@@ -308,7 +308,7 @@ void executeLog(struct atomic* atomicCmd){
         char* endptr = NULL;
         long index = strtol(args[2], &endptr, 10);
         if (endptr == args[2] || *endptr != '\0' || index < 1 || index > logListSize) {
-            fprintf(stderr, "log: Invalid Syntax!\n");
+            fprintf(stderr, "Invalid Syntax!\n");
             return;
         }
         // Find the command: index 1 is newest (tail), index logListSize is oldest (head)
